@@ -1,0 +1,200 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #fff5f7 0%, #ffe0e6 100%);
+    color: #2d2d2d;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 50px 20px;
+}
+
+h1 {
+    margin: 0 0 8px 0;
+    font-size: 2.5em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #d32f2f;
+}
+
+.subtitle {
+    color: #666666;
+    margin-top: 0;
+    margin-bottom: 32px;
+    font-size: 1.1em;
+}
+
+.controls {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+}
+
+input {
+    flex: 1;
+    min-width: 260px;
+    padding: 14px 18px;
+    border: 2px solid #ffc0cb;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #2d2d2d;
+    font-size: 1em;
+    outline: none;
+    transition: all 0.3s;
+}
+
+input:focus {
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.15);
+    background: #fef5f6;
+}
+
+button, .button {
+    padding: 14px 28px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e91e63 0%, #d32f2f 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+}
+
+button:hover, .button:hover {
+    background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
+button:active, .button:active {
+    transform: scale(0.98);
+}
+
+.chain {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.block {
+    background: #ffffff;
+    border: 2px solid #f5a5a5;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(211, 47, 47, 0.12);
+    transition: all 0.3s;
+}
+
+.block:hover {
+    box-shadow: 0 12px 40px rgba(211, 47, 47, 0.18);
+    border-color: #e91e63;
+}
+
+.block.invalid {
+    border-color: #d32f2f;
+    background: linear-gradient(135deg, #ffebee 0%, #ffffff 100%);
+}
+
+.block.valid {
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #f1f8f4 0%, #ffffff 100%);
+}
+
+.block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f5f5f5;
+}
+
+.block-header h3 {
+    margin: 0;
+    font-size: 1.4em;
+    color: #d32f2f;
+}
+
+.badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: #ffe0e6;
+    color: #d32f2f;
+}
+
+.badge.valid {
+    background: #e8f5e9;
+    color: #4caf50;
+}
+
+.label {
+    color: #999999;
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.value {
+    background: #f9f9f9;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 2px solid #f0f0f0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.95em;
+    color: #2d2d2d;
+    word-break: break-all;
+    transition: all 0.2s;
+}
+
+.status-wrap {
+    margin-top: 44px;
+}
+
+.status-wrap h2 {
+    font-size: 1.3em;
+    color: #2d2d2d;
+    margin-bottom: 16px;
+}
+
+.status {
+    padding: 20px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.05em;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.status.valid {
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
+    color: #4caf50;
+    border-color: #81c784;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.15);
+}
+
+.status.invalid {
+    background: linear-gradient(135deg, #ffebee 0%, #ffe0e6 100%);
+    color: #d32f2f;
+    border-color: #ef5350;
+    box-shadow: 0 6px 20px rgba(211, 47, 47, 0.15);
+}

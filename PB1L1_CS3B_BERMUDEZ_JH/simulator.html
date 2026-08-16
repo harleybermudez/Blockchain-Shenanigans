@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========== Character encoding and viewport ========== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain</title>
+    <!-- ========== Link stylesheet ========== -->
+    <link rel="stylesheet" href="css/sim.css">
+</head>
+<body>
+    <!-- ========== Main container ========== -->
+    <div class="container">
+        <!-- ========== Title and description ========== -->
+        <h1>Blockchain Simulator</h1>
+        <p class="subtitle">
+            Add blocks, Inspect hashes, and see how tampering works on PB
+        </p>
+
+        <!-- ========== Input and action buttons ========== -->
+        <section class="controls">
+            <input id="blockData" type="text" placeholder="Enter Block Data"/>
+            <button id="addBlockBtn">Add Block</button>
+            <button id="validateBtn">Validate Chain</button>
+        </section>
+
+        <!-- ========== Blockchain display area ========== -->
+        <section>
+            <div id="chain" class="chain"></div>
+        </section>
+
+        <!-- ========== Chain validity status ========== -->
+        <section class="status-wrap">
+            <h2>Chain Status</h2>
+            <div id="status" class="status valid">Chain is Valid</div>
+        </section>
+    </div>
+
+    <!-- ========== External crypto library for SHA256 ========== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <!-- ========== Blockchain simulator logic ========== -->
+    <script src="js/sim.js"></script>
+</body>
+</html>
