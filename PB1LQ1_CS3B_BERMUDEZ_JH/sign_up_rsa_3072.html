@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCADE TERMINAL: RSA-3072 Enrollment</title>
+    <!-- External stylesheet with arcade aesthetics -->
+    <link rel="stylesheet" href="sursa.css">
+    <!-- JSEncrypt library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsencrypt@latest/bin/jsencrypt.min.js"></script>
+    <!-- 3072-bit key configuration -->
+    <script>window.RSA_KEY_SIZE = 3072;</script>
+</head>
+<body>
+
+    <!-- Main Arcade HUD Header -->
+    <header class="hud-header">
+        <div class="hud-title">
+            <h1>PLAYER ENROLLMENT HUD</h1>
+            <p>SECURE TERMINAL // REAL-TIME ENCRYPTION</p>
+        </div>
+        <div class="badge badge-warning">SYS_MODE: 3072-BIT RSA (MAX SEC)</div>
+    </header>
+
+    <!-- 3-Column Dashboard Container -->
+    <div class="arcade-container">
+
+        <!-- Column 1: Input Form (Cyan Theme) -->
+        <div class="panel panel-cyan">
+            <div class="panel-header">
+                <h2>[1] INPUT_DATA</h2>
+                <span class="pulse-text">AWAITING KEYSTROKES...</span>
+            </div>
+            
+            <form id="enrollmentForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="fullName">PLAYER_NAME</label>
+                    <input type="text" id="fullName" placeholder="e.g., Flynn" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="dob">SPAWN_DATE (DOB)</label>
+                    <input type="date" id="dob">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label for="yearLevel">LEVEL</label>
+                        <select id="yearLevel">
+                            <option value="">SELECT</option>
+                            <option value="1">LEVEL 1</option>
+                            <option value="2">LEVEL 2</option>
+                            <option value="3">LEVEL 3</option>
+                            <option value="4">LEVEL 4</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label for="gender">AVATAR_TYPE</label>
+                        <select id="gender">
+                            <option value="">SELECT</option>
+                            <option value="M">MALE</option>
+                            <option value="F">FEMALE</option>
+                            <option value="O">OTHER</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">GAMERTAG</label>
+                    <input type="text" id="username" placeholder="tron_user" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">ACCESS_CODE</label>
+                    <input type="password" id="password" placeholder="••••••••" autocomplete="off">
+                </div>
+            </form>
+        </div>
+
+        <!-- Column 2: Key Management (Magenta Theme) -->
+        <div class="panel panel-magenta">
+            <div class="panel-header">
+                <h2>[2] KEY_MATRIX</h2>
+                <div id="keyStatus" class="status-box loading">COMPUTING 3072-BIT...</div>
+            </div>
+
+            <div class="console-box">
+                <label for="pubKeyDisplay">PUBLIC_KEY [ENCRYPT_MODULE]</label>
+                <textarea id="pubKeyDisplay" readonly placeholder="CALCULATING MATRIX... (MAY TAKE SECONDS)"></textarea>
+            </div>
+
+            <div class="console-box">
+                <label for="privKeyDisplay">PRIVATE_KEY [DECRYPT_MODULE]</label>
+                <textarea id="privKeyDisplay" readonly placeholder="CALCULATING MATRIX... (MAY TAKE SECONDS)"></textarea>
+            </div>
+        </div>
+
+        <!-- Column 3: Output Results (Neon Green Theme) -->
+        <div class="panel panel-green">
+            <div class="panel-header">
+                <h2>[3] CRYPTO_OUTPUT</h2>
+                <span class="static-text">LIVE FEED</span>
+            </div>
+
+            <div class="console-box">
+                <label for="rawJsonDisplay">RAW_PAYLOAD (PLAINTEXT)</label>
+                <textarea id="rawJsonDisplay" readonly placeholder="NO DATA DETECTED..."></textarea>
+            </div>
+
+            <div class="console-box box-glow-red">
+                <label for="encryptedDisplay">CIPHERTEXT (BASE64)</label>
+                <textarea id="encryptedDisplay" readonly placeholder="ENCRYPTED STREAM WILL APPEAR HERE..."></textarea>
+            </div>
+
+            <div class="console-box box-glow-green">
+                <label for="decryptedDisplay">DECRYPTED_OUTPUT</label>
+                <textarea id="decryptedDisplay" readonly placeholder="DECRYPTED STREAM WILL APPEAR HERE..."></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="sursa.js"></script>
+</body>
+</html>

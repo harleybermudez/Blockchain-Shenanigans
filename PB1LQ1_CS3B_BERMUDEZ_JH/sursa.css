@@ -1,0 +1,178 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #050508;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean, modern HCI font */
+    color: #e2e8f0;
+    padding: 30px;
+    min-height: 100vh;
+}
+
+/* --- HEADER HUD --- */
+.hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto 30px auto;
+    padding: 20px;
+    background: rgba(10, 10, 16, 0.8);
+    border: 2px solid #333;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.hud-title h1 {
+    font-size: 26px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff; /* Neon Glow */
+}
+
+.hud-title p {
+    font-size: 12px;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Badges */
+.badge {
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: 'Courier New', Courier, monospace;
+}
+.badge-cyan { border: 2px solid #00f3ff; color: #00f3ff; background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 10px rgba(0,243,255,0.4); }
+.badge-warning { border: 2px solid #ff0055; color: #ff0055; background: rgba(255, 0, 85, 0.1); box-shadow: 0 0 10px rgba(255,0,85,0.4); }
+
+/* --- 3-COLUMN LAYOUT --- */
+.arcade-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Panel Base Setup (HCI: Clear segmentation) */
+.panel {
+    background-color: rgba(10, 12, 16, 0.9);
+    border-radius: 8px;
+    padding: 24px;
+    flex: 1;
+    min-width: 340px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Panel Thematic Glowing Borders */
+.panel-cyan { border: 2px solid #00f3ff; box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.05), 0 0 15px rgba(0, 243, 255, 0.15); }
+.panel-magenta { border: 2px solid #ff00ea; box-shadow: inset 0 0 20px rgba(255, 0, 234, 0.05), 0 0 15px rgba(255, 0, 234, 0.15); }
+.panel-green { border: 2px solid #39ff14; box-shadow: inset 0 0 20px rgba(57, 255, 20, 0.05), 0 0 15px rgba(57, 255, 20, 0.15); }
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+}
+
+.panel-header h2 {
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+/* Panel Subtexts */
+.pulse-text { color: #00f3ff; font-size: 12px; font-family: monospace; animation: pulse 1.5s infinite; }
+.static-text { color: #39ff14; font-size: 12px; font-family: monospace; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+/* Key Status Indicator */
+.status-box { padding: 4px 10px; font-size: 12px; font-weight: bold; font-family: monospace; border-radius: 4px; }
+.status-box.loading { background: rgba(255, 255, 0, 0.2); color: #ffea00; border: 1px solid #ffea00; }
+.status-box.ready { background: rgba(57, 255, 20, 0.2); color: #39ff14; border: 1px solid #39ff14; }
+
+/* --- FORM & INPUT STYLES (Modern HCI inside Retro Theme) --- */
+.form-group { margin-bottom: 16px; width: 100%; }
+.form-row { display: flex; gap: 16px; width: 100%; }
+.half-width { flex: 1; }
+
+label {
+    display: block;
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    background-color: #0b0c10;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit; /* Keep standard font for readability */
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #00f3ff;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+    background-color: #121620;
+}
+
+/* --- CONSOLE/TEXTAREA BOXES (Cryptographic outputs) --- */
+.console-box { margin-bottom: 16px; width: 100%; }
+
+textarea {
+    width: 100%;
+    height: 100px;
+    background-color: #050508;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 10px;
+    color: #cbd5e1;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    resize: vertical;
+    line-height: 1.4;
+    transition: border-color 0.3s ease;
+}
+
+textarea:focus { outline: none; border-color: #ff00ea; box-shadow: 0 0 10px rgba(255, 0, 234, 0.3); }
+
+/* Thematic Glows for specific data */
+.box-glow-red textarea { border-color: rgba(255, 0, 85, 0.5); color: #ff4d88; }
+.box-glow-green textarea { border-color: rgba(57, 255, 20, 0.5); color: #8cff66; }
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 1100px) {
+    .arcade-container { flex-direction: column; }
+    .panel { width: 100%; min-width: 100%; }
+}
+@media (max-width: 600px) {
+    .hud-header { flex-direction: column; gap: 15px; text-align: center; }
+    .form-row { flex-direction: column; gap: 16px; }
+}
