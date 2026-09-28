@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>postit :: secure_channel</title>
+
+<!--
+  Font choice for this build: everything routes through a monospaced
+  family (JetBrains Mono) since the whole page is framed as a terminal
+  session. Space Grotesk is used only for the big window title so there
+  is one deliberate contrast point instead of monospace everywhere.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap"
+  rel="stylesheet"
+/>
+
+<link rel="stylesheet" href="postit-terminal.css" />
+
+<!-- crypto-js 4.2.0 via cdnjs (Cloudflare CDN) — provides the AES engine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head>
+<body>
+
+<!-- the whole app lives inside one "terminal window" frame -->
+<div class="term">
+
+  <!-- window chrome / title bar -->
+  <div class="term__bar">
+    <span class="term__bar-label">postit — secure_channel</span>
+    <span class="term__cursor" aria-hidden="true">▍</span>
+  </div>
+
+  <div class="term__body">
+
+    <p class="term__intro">
+      // one operator per session, no account system — just enough
+      identity to sign your posts, then every caption gets mirrored
+      through an AES-192 cipher below it.
+    </p>
+
+    <!-- ====================================================
+         PANEL 1 — session login (asked once, then locked out)
+         ==================================================== -->
+    <section id="panel-auth" class="panel">
+      <p class="panel__label">$ whoami --register</p>
+
+      <form id="auth-form" class="auth-grid" autocomplete="off">
+        <label class="fld">
+          <span>full_name</span>
+          <input type="text" id="f-name" required placeholder="Dela Cruz, Juan P." />
+        </label>
+
+        <label class="fld">
+          <span>date_of_birth</span>
+          <input type="date" id="f-dob" required />
+        </label>
+
+        <label class="fld">
+          <span>year_level</span>
+          <select id="f-year" required>
+            <option value="" disabled selected>choose one</option>
+            <option>Grade 7</option>
+            <option>Grade 8</option>
+            <option>Grade 9</option>
+            <option>Grade 10</option>
+            <option>Grade 11</option>
+            <option>Grade 12</option>
+            <option>1st Year College</option>
+            <option>2nd Year College</option>
+            <option>3rd Year College</option>
+            <option>4th Year College</option>
+            <option>Graduate</option>
+          </select>
+        </label>
+
+        <label class="fld">
+          <span>gender</span>
+          <select id="f-gender" required>
+            <option value="" disabled selected>choose one</option>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Non-binary</option>
+            <option>Prefer not to say</option>
+          </select>
+        </label>
+
+        <label class="fld fld--wide">
+          <span>username</span>
+          <input type="text" id="f-user" required placeholder="how posts will be signed" />
+        </label>
+
+        <label class="fld fld--wide">
+          <span>passkey</span>
+          <input type="password" id="f-pass" required placeholder="becomes your AES-192 key" />
+          <small>Run through PBKDF2 to produce a 192-bit key. Kept only in this tab's memory.</small>
+        </label>
+
+        <button type="submit" class="btn btn--amber">$ init session</button>
+      </form>
+    </section>
+
+    <!-- ====================================================
+         PANEL 2 — post composer (revealed after login)
+         ==================================================== -->
+    <section id="panel-compose" class="panel panel--hidden">
+      <p class="panel__label">$ signed in as <span id="signed-in-as">—</span></p>
+
+      <textarea id="f-caption" class="compose-box" rows="3" maxlength="280" placeholder="type a caption, then push it through the cipher..."></textarea>
+
+      <div class="compose-footer">
+        <span id="f-count" class="compose-count">280 chars left</span>
+        <button id="btn-post" type="button" class="btn btn--amber" disabled>$ post</button>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         PANEL 3 — feed of everything posted this session
+         ==================================================== -->
+    <section id="panel-feed" class="panel panel--hidden">
+      <p class="panel__label">$ tail -f ./feed.log</p>
+      <div id="feed" class="feed"></div>
+      <p id="feed-empty" class="feed-empty">-- log empty, nothing posted yet --</p>
+    </section>
+
+  </div>
+
+  <div class="term__footer">
+    session state lives in memory only · reload = clean slate
+  </div>
+</div>
+
+<script src="postit-terminal.js"></script>
+</body>
+</html>
