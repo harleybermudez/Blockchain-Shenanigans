@@ -42,16 +42,6 @@ network changes clear the app session. Transaction signing always uses the expec
 wallet address explicitly. Logging out clears the app session, not MetaMask's site
 permission.
 
-## Limits
-
-This is a classroom app, not an audited public-election system. The blockchain
-records are public, including vote events and wallet addresses. Hiding live results
-in the interface does not hide on-chain counts or provide a secret ballot.
-
-One wallet gets one vote. The admin must verify one real person per authorized
-wallet. The admin is trusted to choose eligibility and closing time. The small
-registration list and duplicate checks are intended for classroom-sized groups.
-
 
 ## Group 
 
