@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voting setup</title>
+    <link rel="icon" href="../assets/ballot.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: #f3f6fa;
+        background:
+          radial-gradient(ellipse at top right, #34486955, transparent 55%),
+          #101319;
+        font:
+          15px/1.7 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 800px;
+        margin: auto;
+        padding: 40px 24px 70px;
+      }
+      a {
+        color: #dbe8fa;
+        text-underline-offset: 4px;
+      }
+      a:focus-visible {
+        outline: 2px solid #dbe8fa;
+        outline-offset: 4px;
+      }
+      h1 {
+        font-size: 36px;
+        line-height: 1.2;
+        font-weight: 550;
+        letter-spacing: -1px;
+        margin: 32px 0 16px;
+      }
+      h2 {
+        font-size: 21px;
+        font-weight: 550;
+        margin: 0 0 20px;
+      }
+      p {
+        color: #bec9d8;
+      }
+      section {
+        margin: 26px 0;
+        padding: 26px;
+        border: 1px solid #ffffff30;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #ffffff10, #ffffff05);
+      }
+      li {
+        margin-bottom: 15px;
+      }
+      ol {
+        padding-left: 22px;
+      }
+      code {
+        font-size: 13px;
+        background: #ffffff0b;
+        border-radius: 5px;
+        padding: 3px 5px;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        padding: 17px;
+        border-radius: 12px;
+        background: #ffffff09;
+        overflow: auto;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+      .label {
+        font-size: 10px;
+        letter-spacing: 1.6px;
+        color: #cbd7e6;
+        margin-top: 36px;
+      }
+      .note {
+        padding: 16px;
+        border-left: 2px solid #cbd7e6;
+        background: #ffffff06;
+        font-size: 13px;
+      }
+      @media (max-width: 440px) {
+        main {
+          padding: 28px 18px 50px;
+        }
+        section {
+          padding: 22px;
+        }
+        h1 {
+          font-size: 30px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="index.html">← Back to the application</a>
+      <div class="label">VERSION 2 · DEPLOYMENT GUIDE</div>
+      <h1>Connect your election.</h1>
+      <p>
+        Deploy a fresh contract for this version, then configure its frontend.
+      </p>
+      <section>
+        <h2>1. Deploy in Remix</h2>
+        <ol>
+          <li>
+            Open
+            <a
+              href="https://remix.ethereum.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Remix</a
+            >. Create <code>CampusVoting.sol</code> using this project's file in
+            <code>contracts</code>.
+          </li>
+          <li>
+            Compile with Solidity <code>0.8.24</code>. Enable optimization with
+            200 runs. For the same compiler settings used in local checks,
+            select EVM Paris.
+          </li>
+          <li>
+            Select Sepolia and your intended admin account in MetaMask. The
+            admin needs test ETH.
+          </li>
+          <li>
+            In Deploy &amp; Run, select the injected MetaMask provider. Check
+            the network and account, deploy CampusVoting, and approve the
+            transaction.
+          </li>
+          <li>
+            Copy the contract address. The deploying wallet is the preassigned
+            electoral admin.
+          </li>
+        </ol>
+      </section>
+      <section>
+        <h2>2. Configure Version 2</h2>
+        <p>
+          Open <code>frontend/script/config.js</code> and replace the address
+          placeholder:
+        </p>
+        <pre><code>address: "YOUR_NEW_DEPLOYED_CONTRACT_ADDRESS"</code></pre>
+        <p>
+          Record the same address in
+          <code>docs/deployed-contract-address.txt</code>. Use the included
+          contract, which supports registration and permanent closing.
+        </p>
+        <p>
+          If using another test network, change <code>chainId</code>,
+          <code>network</code>, and <code>rpc</code> together in config.js. Do
+          not put private keys or secret API keys in frontend files.
+        </p>
+      </section>
+      <section>
+        <h2>3. Run the frontend</h2>
+        <p>
+          Open <code>frontend/html/index.html</code> using VS Code Live Server,
+          or run this from the project root:
+        </p>
+        <pre><code>npx serve frontend</code></pre>
+        <p>
+          Open <code>/html/index.html</code> at the printed local address. Use a
+          desktop browser with MetaMask installed.
+        </p>
+      </section>
+      <section>
+        <h2>4. Test with three accounts</h2>
+        <ol>
+          <li>
+            Admin: add Juan Dela Cruz and Maria Santos for Student Council
+            President.
+          </li>
+          <li>
+            Accounts 2 and 3: connect and submit their voter registrations.
+          </li>
+          <li>
+            Admin: verify each student and authorize the two wallet addresses,
+            then start voting.
+          </li>
+          <li>
+            Account 2: log in and vote for Juan. Account 3: log in and vote for
+            Maria.
+          </li>
+          <li>
+            Try voting again with Account 2. The interface and contract must
+            prevent it.
+          </li>
+          <li>
+            Admin: close voting permanently. Check the final table: one vote
+            each and two total.
+          </li>
+        </ol>
+        <p class="note">
+          Wallets, transactions, vote events, and counts are public blockchain
+          records. This classroom app does not provide a secret ballot. The
+          admin must approve only one wallet per real student.
+        </p>
+      </section>
+      <p>
+        Deployment and actual MetaMask signing are performed by your group. See
+        README.md for the full checklist and contribution table.
+      </p>
+    </main>
+  </body>
+</html>

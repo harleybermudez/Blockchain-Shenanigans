@@ -1,0 +1,127 @@
+/* Page-specific presentation for vote.html. Imported rules provide shared styles. */
+@import url("common.css");
+.ballot-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(220px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.ballot-layout.is-blocked {
+  grid-template-columns: 1fr;
+}
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+legend {
+  font-size: 18px;
+  font-weight: 550;
+  margin-bottom: 16px;
+  padding: 0;
+}
+.candidate-option {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 19px 16px;
+  margin: 0 0 13px;
+  border-radius: 17px;
+  border: 1px solid #ffffff22;
+  background: #10151b45;
+  cursor: pointer;
+}
+.candidate-option:has(input:checked) {
+  border-color: #d6e3f180;
+  background: linear-gradient(120deg, #c6d8ef19, #ffffff0b);
+  box-shadow: inset 0 1px 0 #ffffff20;
+}
+.candidate-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #dbe6f4;
+}
+.candidate-option .candidate-name {
+  display: block;
+  font-size: 16px;
+}
+.candidate-option .candidate-position {
+  font-size: 11px;
+}
+.ballot-hint {
+  margin-top: 22px;
+  margin-bottom: 0;
+  font-size: 12px;
+}
+.selection-name {
+  color: #f3f6fa;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.5px;
+  min-height: 64px;
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+}
+.selection-position {
+  font-size: 12px;
+  min-height: 40px;
+  margin-bottom: 24px;
+}
+.selection-panel .hint {
+  font-size: 11px;
+  margin: 18px 0 0;
+}
+.success-symbol {
+  display: grid;
+  place-items: center;
+  margin: 0 auto 22px;
+  width: 56px;
+  height: 56px;
+  border: 1px solid #ffffff3c;
+  background: #ffffff12;
+  border-radius: 20px;
+  color: #e7f1fc;
+  font-size: 28px;
+}
+.eligibility {
+  font-size: 12px;
+  color: #c1cfdf;
+}
+@media (max-width: 1000px) {
+  .ballot-layout {
+    grid-template-columns: 1fr;
+  }
+  .selection-name {
+    min-height: 0;
+  }
+  .selection-position {
+    min-height: 0;
+  }
+}
+@media (max-width: 400px) {
+  .candidate-option {
+    padding: 17px 12px;
+    gap: 12px;
+  }
+}
+.ballot-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+.selection-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.selection-panel > * {
+  margin: 0;
+  min-height: 0;
+}
+.selection-panel .primary {
+  width: auto;
+  margin-left: auto;
+}

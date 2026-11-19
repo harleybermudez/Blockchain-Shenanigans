@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>frontend/css/results.css</title><style>body{font:14px/1.7 Consolas,monospace;padding:30px;background:#17212e;color:#f0f4fa}a{color:#b8d6ff}span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}span:target{background:#43536b}h1{font:22px system-ui}</style><a href="../documentation.html">Back to documentation</a><h1>frontend/css/results.css</h1><pre><span id="L1"><a href="#L1">   1</a>  /* Page-specific presentation for results.html. Imported rules provide shared styles. */</span>
+<span id="L2"><a href="#L2">   2</a>  @import url(&quot;common.css&quot;);</span>
+<span id="L3"><a href="#L3">   3</a>  .results-head {</span>
+<span id="L4"><a href="#L4">   4</a>    display: flex;</span>
+<span id="L5"><a href="#L5">   5</a>    justify-content: space-between;</span>
+<span id="L6"><a href="#L6">   6</a>    align-items: flex-start;</span>
+<span id="L7"><a href="#L7">   7</a>    gap: 22px;</span>
+<span id="L8"><a href="#L8">   8</a>    margin-bottom: 25px;</span>
+<span id="L9"><a href="#L9">   9</a>  }</span>
+<span id="L10"><a href="#L10">  10</a>  .total {</span>
+<span id="L11"><a href="#L11">  11</a>    text-align: right;</span>
+<span id="L12"><a href="#L12">  12</a>  }</span>
+<span id="L13"><a href="#L13">  13</a>  .total strong {</span>
+<span id="L14"><a href="#L14">  14</a>    display: block;</span>
+<span id="L15"><a href="#L15">  15</a>    font-size: 44px;</span>
+<span id="L16"><a href="#L16">  16</a>    letter-spacing: -1.4px;</span>
+<span id="L17"><a href="#L17">  17</a>    font-weight: 500;</span>
+<span id="L18"><a href="#L18">  18</a>    line-height: 1.2;</span>
+<span id="L19"><a href="#L19">  19</a>  }</span>
+<span id="L20"><a href="#L20">  20</a>  .total small {</span>
+<span id="L21"><a href="#L21">  21</a>    font-size: 11px;</span>
+<span id="L22"><a href="#L22">  22</a>    white-space: nowrap;</span>
+<span id="L23"><a href="#L23">  23</a>  }</span>
+<span id="L24"><a href="#L24">  24</a>  .table-wrap {</span>
+<span id="L25"><a href="#L25">  25</a>    overflow-x: auto;</span>
+<span id="L26"><a href="#L26">  26</a>  }</span>
+<span id="L27"><a href="#L27">  27</a>  table {</span>
+<span id="L28"><a href="#L28">  28</a>    width: 100%;</span>
+<span id="L29"><a href="#L29">  29</a>    border-collapse: collapse;</span>
+<span id="L30"><a href="#L30">  30</a>  }</span>
+<span id="L31"><a href="#L31">  31</a>  th,</span>
+<span id="L32"><a href="#L32">  32</a>  td {</span>
+<span id="L33"><a href="#L33">  33</a>    padding: 18px 10px;</span>
+<span id="L34"><a href="#L34">  34</a>    text-align: left;</span>
+<span id="L35"><a href="#L35">  35</a>    border-bottom: 1px solid #ffffff1d;</span>
+<span id="L36"><a href="#L36">  36</a>    overflow-wrap: anywhere;</span>
+<span id="L37"><a href="#L37">  37</a>  }</span>
+<span id="L38"><a href="#L38">  38</a>  th {</span>
+<span id="L39"><a href="#L39">  39</a>    font-size: 12px;</span>
+<span id="L40"><a href="#L40">  40</a>    font-weight: 500;</span>
+<span id="L41"><a href="#L41">  41</a>    color: #bac6d7;</span>
+<span id="L42"><a href="#L42">  42</a>  }</span>
+<span id="L43"><a href="#L43">  43</a>  td:last-child,</span>
+<span id="L44"><a href="#L44">  44</a>  th:last-child {</span>
+<span id="L45"><a href="#L45">  45</a>    text-align: right;</span>
+<span id="L46"><a href="#L46">  46</a>    font-variant-numeric: tabular-nums;</span>
+<span id="L47"><a href="#L47">  47</a>  }</span>
+<span id="L48"><a href="#L48">  48</a>  .results-empty-symbol {</span>
+<span id="L49"><a href="#L49">  49</a>    font-size: 36px;</span>
+<span id="L50"><a href="#L50">  50</a>    margin: 0 0 20px;</span>
+<span id="L51"><a href="#L51">  51</a>    color: #d8e4f3;</span>
+<span id="L52"><a href="#L52">  52</a>  }</span>
+<span id="L53"><a href="#L53">  53</a>  @media (max-width: 450px) {</span>
+<span id="L54"><a href="#L54">  54</a>    .results-head {</span>
+<span id="L55"><a href="#L55">  55</a>      flex-direction: column;</span>
+<span id="L56"><a href="#L56">  56</a>    }</span>
+<span id="L57"><a href="#L57">  57</a>    .total {</span>
+<span id="L58"><a href="#L58">  58</a>      text-align: left;</span>
+<span id="L59"><a href="#L59">  59</a>    }</span>
+<span id="L60"><a href="#L60">  60</a>    .total strong {</span>
+<span id="L61"><a href="#L61">  61</a>      font-size: 36px;</span>
+<span id="L62"><a href="#L62">  62</a>    }</span>
+<span id="L63"><a href="#L63">  63</a>  }</span></pre></html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101319" />
+    <title>Voter registration</title>
+    <link rel="icon" href="../assets/ballot.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/signup.css" />
+    <!-- Load the wallet library and shared code before this page script. -->
+    <script src="../script/vendor/ethers.umd.min.js" defer></script>
+    <script src="../script/config.js" defer></script>
+    <script src="../script/common.js" defer></script>
+    <script src="../script/signup.js" defer></script>
+  </head>
+  <body data-page="signup">
+    <a class="skip-link" href="#mainContent">Skip to content</a>
+    <div class="app-shell">
+      <div class="menu-corner">
+        <button class="menu-trigger" type="button" popovertarget="pageMenu">
+          <span aria-hidden="true">&#9776;</span> Menu
+        </button>
+        <nav id="pageMenu" popover aria-label="Main navigation">
+          <a href="candidates.html">Candidates</a>
+          <a href="vote.html">Vote</a>
+          <a href="results.html">Results</a>
+          <a href="admin.html" id="manageLink" hidden>Manage election</a>
+          <a href="index.html" id="loginLink">Voter login</a>
+          <a href="signup.html" aria-current="page">Voter registration</a>
+          <a href="admin-login.html">Admin access</a>
+          <button hidden id="logoutButton" class="text-button">Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id="mainContent" class="workspace" tabindex="-1">
+        <header class="topbar">
+          <span id="electionStatus" class="status" hidden></span>
+        </header>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <section class="auth-layout" aria-labelledby="signupHeading">
+          <div class="entry-title">
+            <img class="ballot-art" src="../assets/ballot.svg" alt="" />
+            <h1 id="signupHeading">Register to vote</h1>
+          </div>
+          <div class="auth-panel">
+            <div class="signup-actions">
+              <button
+                class="secondary full"
+                id="connectButton"
+                type="button"
+                disabled
+              >
+                Connect MetaMask
+              </button>
+              <button
+                class="primary full"
+                id="registerButton"
+                type="button"
+                disabled
+              >
+                Submit registration
+              </button>
+            </div>
+            <div class="divider"></div>
+            <p class="auth-bottom">
+              Already registered? <a href="index.html">Log in</a>
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

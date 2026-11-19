@@ -1,0 +1,117 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>frontend/css/admin.css</title><style>body{font:14px/1.7 Consolas,monospace;padding:30px;background:#17212e;color:#f0f4fa}a{color:#b8d6ff}span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}span:target{background:#43536b}h1{font:22px system-ui}</style><a href="../documentation.html">Back to documentation</a><h1>frontend/css/admin.css</h1><pre><span id="L1"><a href="#L1">   1</a>  /* Page-specific presentation for admin.html. Imported rules provide shared styles. */</span>
+<span id="L2"><a href="#L2">   2</a>  @import url(&quot;common.css&quot;);</span>
+<span id="L3"><a href="#L3">   3</a>  .admin-layout {</span>
+<span id="L4"><a href="#L4">   4</a>    display: grid;</span>
+<span id="L5"><a href="#L5">   5</a>    grid-template-columns: minmax(0, 1.7fr) minmax(230px, 1fr);</span>
+<span id="L6"><a href="#L6">   6</a>    gap: 22px;</span>
+<span id="L7"><a href="#L7">   7</a>    align-items: start;</span>
+<span id="L8"><a href="#L8">   8</a>  }</span>
+<span id="L9"><a href="#L9">   9</a>  .admin-forms {</span>
+<span id="L10"><a href="#L10">  10</a>    display: grid;</span>
+<span id="L11"><a href="#L11">  11</a>    gap: 22px;</span>
+<span id="L12"><a href="#L12">  12</a>    min-width: 0;</span>
+<span id="L13"><a href="#L13">  13</a>  }</span>
+<span id="L14"><a href="#L14">  14</a>  details.glass {</span>
+<span id="L15"><a href="#L15">  15</a>    padding: 0;</span>
+<span id="L16"><a href="#L16">  16</a>    overflow: clip;</span>
+<span id="L17"><a href="#L17">  17</a>  }</span>
+<span id="L18"><a href="#L18">  18</a>  summary {</span>
+<span id="L19"><a href="#L19">  19</a>    display: flex;</span>
+<span id="L20"><a href="#L20">  20</a>    align-items: center;</span>
+<span id="L21"><a href="#L21">  21</a>    justify-content: space-between;</span>
+<span id="L22"><a href="#L22">  22</a>    gap: 16px;</span>
+<span id="L23"><a href="#L23">  23</a>    padding: 24px 26px;</span>
+<span id="L24"><a href="#L24">  24</a>    font-size: 19px;</span>
+<span id="L25"><a href="#L25">  25</a>    font-weight: 500;</span>
+<span id="L26"><a href="#L26">  26</a>    list-style: none;</span>
+<span id="L27"><a href="#L27">  27</a>  }</span>
+<span id="L28"><a href="#L28">  28</a>  summary::-webkit-details-marker {</span>
+<span id="L29"><a href="#L29">  29</a>    display: none;</span>
+<span id="L30"><a href="#L30">  30</a>  }</span>
+<span id="L31"><a href="#L31">  31</a>  summary::after {</span>
+<span id="L32"><a href="#L32">  32</a>    content: &quot;+&quot;;</span>
+<span id="L33"><a href="#L33">  33</a>    color: #d3deec;</span>
+<span id="L34"><a href="#L34">  34</a>    margin-left: auto;</span>
+<span id="L35"><a href="#L35">  35</a>    font-size: 20px;</span>
+<span id="L36"><a href="#L36">  36</a>  }</span>
+<span id="L37"><a href="#L37">  37</a>  details[open] &gt; summary::after {</span>
+<span id="L38"><a href="#L38">  38</a>    content: &quot;−&quot;;</span>
+<span id="L39"><a href="#L39">  39</a>  }</span>
+<span id="L40"><a href="#L40">  40</a>  summary small {</span>
+<span id="L41"><a href="#L41">  41</a>    margin-left: auto;</span>
+<span id="L42"><a href="#L42">  42</a>    font-size: 11px;</span>
+<span id="L43"><a href="#L43">  43</a>    font-weight: 400;</span>
+<span id="L44"><a href="#L44">  44</a>  }</span>
+<span id="L45"><a href="#L45">  45</a>  .details-body {</span>
+<span id="L46"><a href="#L46">  46</a>    padding: 0 26px 26px;</span>
+<span id="L47"><a href="#L47">  47</a>  }</span>
+<span id="L48"><a href="#L48">  48</a>  .admin-row {</span>
+<span id="L49"><a href="#L49">  49</a>    display: flex;</span>
+<span id="L50"><a href="#L50">  50</a>    align-items: center;</span>
+<span id="L51"><a href="#L51">  51</a>    gap: 14px;</span>
+<span id="L52"><a href="#L52">  52</a>    justify-content: space-between;</span>
+<span id="L53"><a href="#L53">  53</a>    padding: 18px 0;</span>
+<span id="L54"><a href="#L54">  54</a>    border-top: 1px solid #ffffff19;</span>
+<span id="L55"><a href="#L55">  55</a>  }</span>
+<span id="L56"><a href="#L56">  56</a>  .admin-row &gt; div {</span>
+<span id="L57"><a href="#L57">  57</a>    min-width: 0;</span>
+<span id="L58"><a href="#L58">  58</a>  }</span>
+<span id="L59"><a href="#L59">  59</a>  .admin-row .candidate-name {</span>
+<span id="L60"><a href="#L60">  60</a>    font-size: 14px;</span>
+<span id="L61"><a href="#L61">  61</a>  }</span>
+<span id="L62"><a href="#L62">  62</a>  .list-spacing {</span>
+<span id="L63"><a href="#L63">  63</a>    margin-top: 26px;</span>
+<span id="L64"><a href="#L64">  64</a>  }</span>
+<span id="L65"><a href="#L65">  65</a>  .list-heading {</span>
+<span id="L66"><a href="#L66">  66</a>    margin: 28px 0 12px;</span>
+<span id="L67"><a href="#L67">  67</a>    font-size: 13px;</span>
+<span id="L68"><a href="#L68">  68</a>    color: #cfdae8;</span>
+<span id="L69"><a href="#L69">  69</a>  }</span>
+<span id="L70"><a href="#L70">  70</a>  .control-panel .primary,</span>
+<span id="L71"><a href="#L71">  71</a>  .control-panel .secondary {</span>
+<span id="L72"><a href="#L72">  72</a>    margin-top: 14px;</span>
+<span id="L73"><a href="#L73">  73</a>  }</span>
+<span id="L74"><a href="#L74">  74</a>  .phase {</span>
+<span id="L75"><a href="#L75">  75</a>    display: block;</span>
+<span id="L76"><a href="#L76">  76</a>    padding: 14px 16px;</span>
+<span id="L77"><a href="#L77">  77</a>    background: #ffffff0a;</span>
+<span id="L78"><a href="#L78">  78</a>    border-radius: 14px;</span>
+<span id="L79"><a href="#L79">  79</a>    border: 1px solid #ffffff1d;</span>
+<span id="L80"><a href="#L80">  80</a>    font-size: 15px;</span>
+<span id="L81"><a href="#L81">  81</a>    margin: 25px 0 16px;</span>
+<span id="L82"><a href="#L82">  82</a>  }</span>
+<span id="L83"><a href="#L83">  83</a>  .control-panel .hint {</span>
+<span id="L84"><a href="#L84">  84</a>    font-size: 12px;</span>
+<span id="L85"><a href="#L85">  85</a>    margin-top: 22px;</span>
+<span id="L86"><a href="#L86">  86</a>    margin-bottom: 0;</span>
+<span id="L87"><a href="#L87">  87</a>  }</span>
+<span id="L88"><a href="#L88">  88</a>  @media (max-width: 1080px) {</span>
+<span id="L89"><a href="#L89">  89</a>    .admin-layout {</span>
+<span id="L90"><a href="#L90">  90</a>      grid-template-columns: 1fr;</span>
+<span id="L91"><a href="#L91">  91</a>    }</span>
+<span id="L92"><a href="#L92">  92</a>  }</span>
+<span id="L93"><a href="#L93">  93</a>  @media (max-width: 400px) {</span>
+<span id="L94"><a href="#L94">  94</a>    summary {</span>
+<span id="L95"><a href="#L95">  95</a>      padding: 22px 20px;</span>
+<span id="L96"><a href="#L96">  96</a>      font-size: 18px;</span>
+<span id="L97"><a href="#L97">  97</a>    }</span>
+<span id="L98"><a href="#L98">  98</a>    .details-body {</span>
+<span id="L99"><a href="#L99">  99</a>      padding: 0 20px 22px;</span>
+<span id="L100"><a href="#L100"> 100</a>    }</span>
+<span id="L101"><a href="#L101"> 101</a>    .admin-row {</span>
+<span id="L102"><a href="#L102"> 102</a>      flex-wrap: wrap;</span>
+<span id="L103"><a href="#L103"> 103</a>    }</span>
+<span id="L104"><a href="#L104"> 104</a>  }</span>
+<span id="L105"><a href="#L105"> 105</a>  .admin-layout {</span>
+<span id="L106"><a href="#L106"> 106</a>    display: flex;</span>
+<span id="L107"><a href="#L107"> 107</a>    flex-direction: column-reverse;</span>
+<span id="L108"><a href="#L108"> 108</a>  }</span>
+<span id="L109"><a href="#L109"> 109</a>  .admin-layout &gt; * {</span>
+<span id="L110"><a href="#L110"> 110</a>    width: 100%;</span>
+<span id="L111"><a href="#L111"> 111</a>  }</span>
+<span id="L112"><a href="#L112"> 112</a>  @media (min-width: 850px) {</span>
+<span id="L113"><a href="#L113"> 113</a>    .admin-forms {</span>
+<span id="L114"><a href="#L114"> 114</a>      grid-template-columns: repeat(2, minmax(0, 1fr));</span>
+<span id="L115"><a href="#L115"> 115</a>      align-items: start;</span>
+<span id="L116"><a href="#L116"> 116</a>    }</span>
+<span id="L117"><a href="#L117"> 117</a>  }</span></pre></html>

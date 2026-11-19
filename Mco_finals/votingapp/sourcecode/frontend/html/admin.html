@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101319" />
+    <title>Manage election</title>
+    <link rel="icon" href="../assets/ballot.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/admin.css" />
+    <!-- Load the wallet library and shared code before this page script. -->
+    <script src="../script/vendor/ethers.umd.min.js" defer></script>
+    <script src="../script/config.js" defer></script>
+    <script src="../script/common.js" defer></script>
+    <script src="../script/admin.js" defer></script>
+  </head>
+  <body data-page="admin">
+    <a class="skip-link" href="#mainContent">Skip to content</a>
+    <div class="app-shell">
+      <div class="menu-corner">
+        <button class="menu-trigger" type="button" popovertarget="pageMenu">
+          <span aria-hidden="true">&#9776;</span> Menu
+        </button>
+        <nav id="pageMenu" popover aria-label="Main navigation">
+          <a href="candidates.html">Candidates</a>
+          <a href="vote.html">Vote</a>
+          <a href="results.html">Results</a>
+          <a href="admin.html" id="manageLink" hidden aria-current="page"
+            >Manage election</a
+          >
+          <a href="index.html" id="loginLink">Voter login</a>
+          <a href="signup.html">Voter registration</a>
+          <a href="admin-login.html">Admin access</a>
+          <button hidden id="logoutButton" class="text-button">Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id="mainContent" class="workspace" tabindex="-1">
+        <header class="topbar">
+          <span id="electionStatus" class="status" hidden></span>
+        </header>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <section aria-labelledby="adminHeading">
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">ELECTORAL ADMIN</div>
+              <h1 id="adminHeading">Manage the election.</h1>
+              <p>Prepare candidates and authorize voters before starting.</p>
+            </div>
+            <button id="refreshButton" class="secondary" type="button" disabled>
+              Refresh <span aria-hidden="true">↻</span>
+            </button>
+          </div>
+          <div id="adminGate" class="glass empty">
+            <h2>Admin login required</h2>
+            <a class="secondary" href="admin-login.html"
+              >Electoral admin login</a
+            >
+          </div>
+          <div id="adminContent" class="admin-layout" hidden>
+            <div class="admin-forms">
+              <details class="glass" open>
+                <summary>
+                  Candidates <small id="candidateCount">0 added</small>
+                </summary>
+                <div class="details-body">
+                  <form id="candidateForm">
+                    <label for="candidateName">Candidate full name</label
+                    ><input
+                      id="candidateName"
+                      name="candidateName"
+                      required
+                      maxlength="80"
+                      placeholder="e.g. Juan Dela Cruz"
+                      autocomplete="off"
+                    />
+                    <label for="candidatePosition">Position</label
+                    ><input
+                      id="candidatePosition"
+                      name="candidatePosition"
+                      required
+                      maxlength="80"
+                      placeholder="e.g. Student Council President"
+                      autocomplete="off"
+                    />
+                    <button
+                      id="addCandidateButton"
+                      class="primary"
+                      type="submit"
+                      disabled
+                    >
+                      Add candidate
+                    </button>
+                  </form>
+                  <div id="adminCandidates" class="list-spacing"></div>
+                </div>
+              </details>
+              <details class="glass" open>
+                <summary>
+                  Voter approvals <small id="voterCount">0 approved</small>
+                </summary>
+                <div class="details-body">
+                  <form id="authorizeForm">
+                    <label for="voterAddress">Voter wallet address</label
+                    ><input
+                      id="voterAddress"
+                      name="voterAddress"
+                      required
+                      placeholder="0x…"
+                      spellcheck="false"
+                      autocomplete="off"
+                    />
+                    <button
+                      id="authorizeButton"
+                      class="primary"
+                      type="submit"
+                      disabled
+                    >
+                      Authorize voter
+                    </button>
+                  </form>
+                  <h3 class="list-heading">Registered wallets</h3>
+                  <p id="emptyVoters" class="hint">
+                    No registered wallets yet.
+                  </p>
+                  <div id="registeredVoters"></div>
+                </div>
+              </details>
+            </div>
+            <aside class="glass control-panel">
+              <div class="eyebrow">ELECTION CONTROL</div>
+              <h2>Voting process</h2>
+              <span id="phase" class="phase">Setup</span>
+              <button
+                id="startButton"
+                class="primary full"
+                type="button"
+                disabled
+              >
+                Start voting
+              </button>
+              <button
+                id="closeButton"
+                class="secondary full"
+                type="button"
+                disabled
+              >
+                Close voting
+              </button>
+              <p class="hint">
+                Start with at least two candidates and one approved voter.
+                Closing is permanent.
+              </p>
+            </aside>
+          </div>
+          <template id="adminCandidateRow"
+            ><div class="admin-row">
+              <div>
+                <strong class="candidate-name"></strong
+                ><small class="candidate-position"></small>
+              </div></div
+          ></template>
+          <template id="voterRow"
+            ><div class="admin-row">
+              <div>
+                <p class="wallet-address"></p>
+                <small class="voter-status"></small>
+              </div>
+              <button class="secondary small-button" type="button">
+                Review
+              </button>
+            </div></template
+          >
+        </section>
+      </main>
+    </div>
+    <dialog id="reviewDialog" aria-labelledby="reviewTitle">
+      <div class="eyebrow">REVIEW THIS ACTION</div>
+      <h2 id="reviewTitle">Review</h2>
+      <p id="reviewText"></p>
+      <div class="dialog-actions">
+        <button id="cancelAction" class="secondary" type="button">
+          Go back</button
+        ><button id="confirmAction" class="primary" type="button">
+          Confirm
+        </button>
+      </div>
+    </dialog>
+  </body>
+</html>

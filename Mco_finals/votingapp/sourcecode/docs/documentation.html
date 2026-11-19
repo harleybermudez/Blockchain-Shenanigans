@@ -1,0 +1,5599 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voting application Version 2 documentation</title><style>body{font:16px/1.65 system-ui,sans-serif;color:#202a35;background:#f3f5f7;margin:0}main{max-width:1020px;margin:auto;padding:44px 36px;background:white}h1{font-size:36px;line-height:1.2}h2{margin-top:44px;font-size:25px}h3{margin-top:28px}a{color:#174e86}nav{padding:18px;background:#eef2f6;border-radius:12px}nav a{display:inline-block;margin:4px 16px 4px 0}table{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}td,th{border:1px solid #d7dee6;padding:12px;text-align:left;vertical-align:top}th{background:#eef2f6}pre{background:#16212e;color:#eff4fa;padding:20px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 Consolas,monospace;border-radius:10px}figure{margin:22px 0;padding:18px;border:1px solid #ccd5df;border-radius:10px}figure img{width:100%;height:auto}figcaption{font-size:14px;color:#445568;margin-top:12px}.pending{padding:24px;background:#f4f6f8;border:1px dashed #aab7c5}.note{border-left:4px solid #657c94;padding:12px 18px;background:#f0f4f8}li{margin-bottom:8px}code{font-size:.9em}footer{margin-top:48px;color:#5c6976;font-size:13px}@media print{body{background:white}main{padding:0;max-width:none}h2,h3{break-after:avoid}figure,pre{break-inside:avoid}nav{display:none}a{color:inherit}}</style><style>.annotation-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}main{max-width:1480px}.annotation-layout iframe{display:block;width:100%;height:760px;border:1px solid #ccd5df;border-radius:8px;background:#fff}.annotation-notes h3{margin-top:0}.annotation-notes article{margin-bottom:24px}.annotation-notes pre{font-size:12px}.code-label{font-size:12px;color:#536576;overflow-wrap:anywhere}@media(max-width:950px){.annotation-layout{grid-template-columns:1fr}}@media print{.annotation-layout{grid-template-columns:1fr}.annotation-layout iframe{height:650px}}</style><style>.snippet-description{background:#f1f5f8;border:1px solid #d6e0e8;border-radius:9px;padding:14px 16px;margin:14px 0 10px;font-size:14px}.snippet-description p{margin:4px 0}.snippet-description p:first-child{margin-bottom:10px}</style><style>:root{--accent:#33485e}main{padding:clamp(18px,3vw,48px)}main>h1{margin-bottom:.35em}main>nav{display:flex;gap:1rem;background:transparent;padding:0}main>nav a{background:var(--accent);color:white;padding:.55em 1.2em;border-radius:.45em;text-decoration:none;font-weight:650}section>h2{font-size:clamp(32px,4vw,48px);border-top:3px solid var(--accent);padding-top:.5em;margin-bottom:0;color:var(--accent)}section>p{margin-top:.3em}.topics{padding:.5em 1em}.topics a{font-size:.95em}section>article{margin:2.5em 0;scroll-margin-top:1em}section>article>h3{font-size:clamp(23px,2.2vw,32px);margin-bottom:.3em}.annotation-notes h4{font-size:1.15em;margin:0}iframe{box-sizing:border-box}@media print{main>nav,.topics{display:none}section+section{break-before:page}}</style></head><body><main><h1>Voting application Version 2 documentation</h1><p>Follow a ballot from wallet login to the final count. The numbered markers pair each interface control with the code that handles it.</p><nav aria-label="Presentation sections"><a href="#frontend">Frontend</a><a href="#backend">Backend</a></nav><section aria-labelledby="frontend"><h2 id="frontend">Frontend</h2><p>What the voter and electoral administrator see, and how each page responds to their actions.</p><nav class="topics" aria-label="Frontend topics"><a href="#structure">Page structure and shared scripts</a><a href="#index">Voter login</a><a href="#signup">Voter registration</a><a href="#admin-login">Administrator login</a><a href="#admin">Election management</a><a href="#candidates">Candidate list</a><a href="#vote">Voting</a><a href="#results">Final results</a><a href="#transactions">Wallet requests and transaction confirmation</a></nav><article id="structure"><h3>Page structure and shared scripts</h3><table><tbody><tr><th>Location</th><th>Responsibility</th></tr><tr><td><code>frontend/html</code></td><td>Separate voter and administrator pages and the setup guide</td></tr><tr><td><code>frontend/css</code></td><td>Shared and page-specific styles</td></tr><tr><td><code>frontend/script</code></td><td>Wallet access, contract reads, transactions, and individual page behavior</td></tr><tr><td><code>frontend/abi.json</code></td><td>Compiler-generated contract interface loaded by initialize() or app.start()</td></tr></tbody></table><p>HTML loads Ethers.js first, followed by the shared script and the matching page script. Version 2 also loads config.js before common.js. The read-only RPC loads election data. MetaMask signs changes using the connected wallet.</p><p>Version 2 groups shared state and methods in the app object. Page scripts pass rendering callbacks to app.start(). Native HTML templates provide candidate rows. Its dark glass interface uses a native popover menu and a silver ballot-box SVG logo.</p></article><article id="index"><h3>Voter login</h3><p>Connect the registered voter wallet and route to voting or registration.</p><figure><div class="annotation-layout"><iframe title="Annotated index interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Voter login</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for index.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  align-items: end;
+  gap: clamp(22px, 6vw, 90px);
+  padding: clamp(32px, 8vw, 100px) 0;
+}
+.entry-title h1 {
+  font-size: clamp(48px, 7vw, 100px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  margin: 30px 0 0;
+}
+.auth-panel {
+  padding: 28px 0 12px;
+  border-top: 1px solid #a1b0c2;
+}
+.auth-panel p {
+  font-size: 16px;
+}
+.auth-bottom {
+  margin-bottom: 0;
+}
+.ballot-art { display:block; width:160px; height:auto; }
+@media (max-width: 700px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .ballot-art {
+    width: 112px;
+    height: auto;
+  }
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;index&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a>Candidates</a>
+          <a>Vote</a>
+          <a>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot; aria-current=&quot;page&quot;>Voter login</a>
+          <a>Voter registration</a>
+          <a>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section class=&quot;auth-layout&quot; aria-labelledby=&quot;loginHeading&quot;>
+          <div class=&quot;entry-title&quot;>
+            <img class=&quot;ballot-art&quot; src=&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4NCiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJzaWx2ZXIiIHgyPSI4NSUiIHkyPSIxMDAlIj48c3RvcCBzdG9wLWNvbG9yPSIjZjdmYmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjODc5OGFkIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+DQogIDxwYXRoIGZpbGw9InVybCgjc2lsdmVyKSIgZD0ibTQ1IDcgMjggMTAtMTAgMjYtMjgtMTB6Ii8+DQogIDxwYXRoIGZpbGw9IiNjM2NmZGEiIGQ9Im0xOCA0NyAxNS0xMSAzMCAxMSA1LTEyIDE0IDEyLTMyIDE0eiIvPg0KICA8cGF0aCBmaWxsPSIjODI5MmE0IiBkPSJtMTcgNTIgMzAgMTR2MjdMMTcgNzh6Ii8+DQogIDxwYXRoIGZpbGw9InVybCgjc2lsdmVyKSIgZD0ibTUyIDY2IDMxLTE0djI2TDUyIDkzeiIvPg0KPC9zdmc+&quot; alt=&quot;&quot;>
+            <h1 id=&quot;loginHeading&quot;>Voter login</h1>
+          </div>
+          <div class=&quot;auth-panel&quot;>
+            <p>Log in with your registered wallet.</p>
+            <button class=&quot;primary full doc-target&quot; id=&quot;voterLoginButton&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+              Log in with MetaMask <span aria-hidden=&quot;true&quot;>→</span>
+            <span class=&quot;doc-bubble&quot;>1</span></button>
+            <div class=&quot;divider&quot;></div>
+            <p class=&quot;auth-bottom&quot;>
+              New voter? <a>Sign up</a>
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Wallet login</h4><p>The login button asks MetaMask for an account. The shared connection function checks its role and routes the user.</p><div class="snippet-description"><p><strong>Wallet login button handler</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript with Ethers.js and the MetaMask provider</p><p><strong>Source file: </strong>frontend/script/index.js</p><p><strong>Purpose: </strong>Runs when the voter clicks the login button. It calls the shared wallet connection code, which checks the account and directs the voter to the next page.</p></div><pre>// Page actions for index.html. Shared wallet and contract logic loads first.
+byId("voterLoginButton").onclick = function () { app.connect("voter"); };
+app.start(function () { byId("voterLoginButton").disabled = !app.configured || app.working; });
+</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure><p>The role check reads the contract owner. Admin access comes from the deployment wallet, while a voter uses a separate wallet. <code>frontend/script/common.js line 93</code></p></article><article id="signup"><h3>Voter registration</h3><p>Connect a wallet and submit registration while setup is open. Registration waits for admin approval.</p><figure><div class="annotation-layout"><iframe title="Annotated signup interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Voter registration</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for signup.html. Imported rules provide shared styles. */
+/* Page-specific presentation for index.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  align-items: end;
+  gap: clamp(22px, 6vw, 90px);
+  padding: clamp(32px, 8vw, 100px) 0;
+}
+.entry-title h1 {
+  font-size: clamp(48px, 7vw, 100px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  margin: 30px 0 0;
+}
+.auth-panel {
+  padding: 28px 0 12px;
+  border-top: 1px solid #a1b0c2;
+}
+.auth-panel p {
+  font-size: 16px;
+}
+.auth-bottom {
+  margin-bottom: 0;
+}
+.ballot-art { display:block; width:160px; height:auto; }
+@media (max-width: 700px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .ballot-art {
+    width: 112px;
+    height: auto;
+  }
+}
+
+.signup-actions {
+  display: grid;
+  gap: 14px;
+  margin-top: 30px;
+}
+.signup-actions .primary {
+  margin-top: 0;
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;signup&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a>Candidates</a>
+          <a>Vote</a>
+          <a>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot;>Voter login</a>
+          <a aria-current=&quot;page&quot;>Voter registration</a>
+          <a>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section class=&quot;auth-layout&quot; aria-labelledby=&quot;signupHeading&quot;>
+          <div class=&quot;entry-title&quot;>
+            <img class=&quot;ballot-art&quot; src=&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4NCiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJzaWx2ZXIiIHgyPSI4NSUiIHkyPSIxMDAlIj48c3RvcCBzdG9wLWNvbG9yPSIjZjdmYmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjODc5OGFkIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+DQogIDxwYXRoIGZpbGw9InVybCgjc2lsdmVyKSIgZD0ibTQ1IDcgMjggMTAtMTAgMjYtMjgtMTB6Ii8+DQogIDxwYXRoIGZpbGw9IiNjM2NmZGEiIGQ9Im0xOCA0NyAxNS0xMSAzMCAxMSA1LTEyIDE0IDEyLTMyIDE0eiIvPg0KICA8cGF0aCBmaWxsPSIjODI5MmE0IiBkPSJtMTcgNTIgMzAgMTR2MjdMMTcgNzh6Ii8+DQogIDxwYXRoIGZpbGw9InVybCgjc2lsdmVyKSIgZD0ibTUyIDY2IDMxLTE0djI2TDUyIDkzeiIvPg0KPC9zdmc+&quot; alt=&quot;&quot;>
+            <h1 id=&quot;signupHeading&quot;>Register to vote</h1>
+          </div>
+          <div class=&quot;auth-panel&quot;>
+            <div class=&quot;signup-actions&quot;>
+              <button class=&quot;secondary full doc-target&quot; id=&quot;connectButton&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+                Connect MetaMask
+              <span class=&quot;doc-bubble&quot;>1</span></button>
+              <button class=&quot;primary full doc-target&quot; id=&quot;registerButton&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+                Submit registration
+              <span class=&quot;doc-bubble&quot;>2</span></button>
+            </div>
+            <div class=&quot;divider&quot;></div>
+            <p class=&quot;auth-bottom&quot;>
+              Already registered? <a>Log in</a>
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Connect wallet</h4><p>Connect the voter wallet before submitting registration.</p><div class="snippet-description"><p><strong>Voter registration handler</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript with Ethers.js and the MetaMask provider</p><p><strong>Source file: </strong>frontend/script/signup.js</p><p><strong>Purpose: </strong>Connects the voter wallet or sends registerVoter() to the smart contract. The button state prevents registration while disconnected, after registration, or after setup ends.</p></div><pre>// Page actions for signup.html. Shared wallet and contract logic loads first.
+byId("connectButton").onclick = function () { app.connect("signup"); };
+byId("registerButton").onclick = function () {
+  if (!byId("registerButton").disabled) app.send("registerVoter", [], "Registration recorded. Waiting for admin approval.");
+};
+app.start(function () {
+  byId("connectButton").disabled = !app.configured || app.working || !!app.account;
+  byId("connectButton").textContent = app.account ? "Wallet connected" : "Connect MetaMask";</pre></article><article><h4>2. Submit registration</h4><p>Registration sends registerVoter() and becomes available only during setup.</p><div class="snippet-description"><p><strong>Voter registration handler</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript with Ethers.js and the MetaMask provider</p><p><strong>Source file: </strong>frontend/script/signup.js</p><p><strong>Purpose: </strong>Connects the voter wallet or sends registerVoter() to the smart contract. The button state prevents registration while disconnected, after registration, or after setup ends.</p></div><pre>byId("connectButton").onclick = function () { app.connect("signup"); };
+byId("registerButton").onclick = function () {
+  if (!byId("registerButton").disabled) app.send("registerVoter", [], "Registration recorded. Waiting for admin approval.");
+};
+app.start(function () {
+  byId("connectButton").disabled = !app.configured || app.working || !!app.account;
+  byId("connectButton").textContent = app.account ? "Wallet connected" : "Connect MetaMask";
+  byId("registerButton").disabled = !app.ready || app.working || !app.account || app.admin || app.registered || app.data.phase !== "setup";
+  byId("registerButton").textContent = app.registered ? "Registration recorded" : "Submit registration";</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure><p>The button is disabled while a request is pending, when the wallet has registered already, or when setup has ended. Registration calls registerVoter(). Admin authorization calls authorizeVoter(). <code>contracts/CampusVoting.sol line 44</code></p></article><article id="admin-login"><h3>Administrator login</h3><p>Connect the deployment wallet. Its address is checked against owner() before admin access.</p><figure><div class="annotation-layout"><iframe title="Annotated admin-login interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Admin login</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for admin-login.html. Imported rules provide shared styles. */
+/* Page-specific presentation for index.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  align-items: end;
+  gap: clamp(22px, 6vw, 90px);
+  padding: clamp(32px, 8vw, 100px) 0;
+}
+.entry-title h1 {
+  font-size: clamp(48px, 7vw, 100px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  margin: 30px 0 0;
+}
+.auth-panel {
+  padding: 28px 0 12px;
+  border-top: 1px solid #a1b0c2;
+}
+.auth-panel p {
+  font-size: 16px;
+}
+.auth-bottom {
+  margin-bottom: 0;
+}
+.ballot-art { display:block; width:160px; height:auto; }
+@media (max-width: 700px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .ballot-art {
+    width: 112px;
+    height: auto;
+  }
+}
+
+.back-link {
+  display: inline-block;
+  font-size: 12px;
+  margin-bottom: 24px;
+  text-decoration: none;
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;admin-login&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a>Candidates</a>
+          <a>Vote</a>
+          <a>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot;>Voter login</a>
+          <a>Voter registration</a>
+          <a aria-current=&quot;page&quot;>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section class=&quot;auth-layout&quot; aria-labelledby=&quot;adminLoginHeading&quot;>
+          <div class=&quot;entry-title&quot;>
+            <img class=&quot;ballot-art&quot; src=&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4NCiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJzaWx2ZXIiIHgyPSI4NSUiIHkyPSIxMDAlIj48c3RvcCBzdG9wLWNvbG9yPSIjZjdmYmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjODc5OGFkIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+DQogIDxwYXRoIGZpbGw9InVybCgjc2lsdmVyKSIgZD0ibTQ1IDcgMjggMTAtMTAgMjYtMjgtMTB6Ii8+DQogIDxwYXRoIGZpbGw9IiNjM2NmZGEiIGQ9Im0xOCA0NyAxNS0xMSAzMCAxMSA1LTEyIDE0IDEyLTMyIDE0eiIvPg0KICA8cGF0aCBmaWxsPSIjODI5MmE0IiBkPSJtMTcgNTIgMzAgMTR2MjdMMTcgNzh6Ii8+DQogIDxwYXRoIGZpbGw9InVybCgjc2lsdmVyKSIgZD0ibTUyIDY2IDMxLTE0djI2TDUyIDkzeiIvPg0KPC9zdmc+&quot; alt=&quot;&quot;>
+            <h1 id=&quot;adminLoginHeading&quot;>Admin login</h1>
+          </div>
+          <div class=&quot;auth-panel&quot;>
+            <button class=&quot;primary full doc-target&quot; id=&quot;adminLoginButton&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+              Connect admin wallet <span aria-hidden=&quot;true&quot;>→</span>
+            <span class=&quot;doc-bubble&quot;>1</span></button>
+          </div>
+        </section>
+      </main>
+    </div>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Administrator login</h4><p>The selected account must match the deployment wallet returned by owner().</p><div class="snippet-description"><p><strong>Administrator login button handler</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript with Ethers.js and the MetaMask provider</p><p><strong>Source file: </strong>frontend/script/admin-login.js</p><p><strong>Purpose: </strong>Calls the shared connection function with the administrator role. The shared code compares the connected wallet with the contract owner before granting admin access.</p></div><pre>// Page actions for admin-login.html. Shared wallet and contract logic loads first.
+byId("adminLoginButton").onclick = function () { app.connect("admin"); };
+app.start(function () { byId("adminLoginButton").disabled = !app.configured || app.working; });
+</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure><p>The role check reads the contract owner. Admin access comes from the deployment wallet, while a voter uses a separate wallet. <code>frontend/script/common.js line 93</code></p></article><article id="admin"><h3>Election management</h3><p>Add candidates, review and approve wallets, start voting, and close it permanently.</p><figure><div class="annotation-layout"><iframe title="Annotated admin interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Manage election</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for admin.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(230px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.admin-forms {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+details.glass {
+  padding: 0;
+  overflow: clip;
+}
+summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 26px;
+  font-size: 19px;
+  font-weight: 500;
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+summary::after {
+  content: &quot;+&quot;;
+  color: #d3deec;
+  margin-left: auto;
+  font-size: 20px;
+}
+details[open] > summary::after {
+  content: &quot;−&quot;;
+}
+summary small {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+}
+.details-body {
+  padding: 0 26px 26px;
+}
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 18px 0;
+  border-top: 1px solid #ffffff19;
+}
+.admin-row > div {
+  min-width: 0;
+}
+.admin-row .candidate-name {
+  font-size: 14px;
+}
+.list-spacing {
+  margin-top: 26px;
+}
+.list-heading {
+  margin: 28px 0 12px;
+  font-size: 13px;
+  color: #cfdae8;
+}
+.control-panel .primary,
+.control-panel .secondary {
+  margin-top: 14px;
+}
+.phase {
+  display: block;
+  padding: 14px 16px;
+  background: #ffffff0a;
+  border-radius: 14px;
+  border: 1px solid #ffffff1d;
+  font-size: 15px;
+  margin: 25px 0 16px;
+}
+.control-panel .hint {
+  font-size: 12px;
+  margin-top: 22px;
+  margin-bottom: 0;
+}
+@media (max-width: 1080px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 400px) {
+  summary {
+    padding: 22px 20px;
+    font-size: 18px;
+  }
+  .details-body {
+    padding: 0 20px 22px;
+  }
+  .admin-row {
+    flex-wrap: wrap;
+  }
+}
+.admin-layout {
+  display: flex;
+  flex-direction: column-reverse;
+}
+.admin-layout > * {
+  width: 100%;
+}
+@media (min-width: 850px) {
+  .admin-forms {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;admin&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a>Candidates</a>
+          <a>Vote</a>
+          <a>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot; aria-current=&quot;page&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot;>Voter login</a>
+          <a>Voter registration</a>
+          <a>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section aria-labelledby=&quot;adminHeading&quot;>
+          <div class=&quot;page-heading&quot;>
+            <div>
+              <div class=&quot;eyebrow&quot;>ELECTORAL ADMIN</div>
+              <h1 id=&quot;adminHeading&quot;>Manage the election.</h1>
+              <p>Prepare candidates and authorize voters before starting.</p>
+            </div>
+            <button id=&quot;refreshButton&quot; class=&quot;secondary&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+              Refresh <span aria-hidden=&quot;true&quot;>↻</span>
+            </button>
+          </div>
+          <div id=&quot;adminGate&quot; class=&quot;glass empty doc-target&quot;>
+            <h2>Admin login required</h2>
+            <a class=&quot;secondary&quot;>Electoral admin login</a>
+          <span class=&quot;doc-bubble&quot;>1</span></div>
+          <div id=&quot;adminContent&quot; class=&quot;admin-layout&quot; hidden=&quot;&quot;>
+            <div class=&quot;admin-forms&quot;>
+              <details class=&quot;glass&quot; open=&quot;&quot;>
+                <summary>
+                  Candidates <small id=&quot;candidateCount&quot;>0 added</small>
+                </summary>
+                <div class=&quot;details-body&quot;>
+                  <form id=&quot;candidateForm&quot;>
+                    <label for=&quot;candidateName&quot;>Candidate full name</label><input id=&quot;candidateName&quot; name=&quot;candidateName&quot; required=&quot;&quot; maxlength=&quot;80&quot; placeholder=&quot;e.g. Juan Dela Cruz&quot; autocomplete=&quot;off&quot;>
+                    <label for=&quot;candidatePosition&quot;>Position</label><input id=&quot;candidatePosition&quot; name=&quot;candidatePosition&quot; required=&quot;&quot; maxlength=&quot;80&quot; placeholder=&quot;e.g. Student Council President&quot; autocomplete=&quot;off&quot;>
+                    <button id=&quot;addCandidateButton&quot; class=&quot;primary&quot; type=&quot;submit&quot; disabled=&quot;&quot;>
+                      Add candidate
+                    </button>
+                  </form>
+                  <div id=&quot;adminCandidates&quot; class=&quot;list-spacing&quot;></div>
+                </div>
+              </details>
+              <details class=&quot;glass&quot; open=&quot;&quot;>
+                <summary>
+                  Voter approvals <small id=&quot;voterCount&quot;>0 approved</small>
+                </summary>
+                <div class=&quot;details-body&quot;>
+                  <form id=&quot;authorizeForm&quot;>
+                    <label for=&quot;voterAddress&quot;>Voter wallet address</label><input id=&quot;voterAddress&quot; name=&quot;voterAddress&quot; required=&quot;&quot; placeholder=&quot;0x…&quot; spellcheck=&quot;false&quot; autocomplete=&quot;off&quot;>
+                    <button id=&quot;authorizeButton&quot; class=&quot;primary&quot; type=&quot;submit&quot; disabled=&quot;&quot;>
+                      Authorize voter
+                    </button>
+                  </form>
+                  <h3 class=&quot;list-heading&quot;>Registered wallets</h3>
+                  <p id=&quot;emptyVoters&quot; class=&quot;hint&quot;>
+                    No registered wallets yet.
+                  </p>
+                  <div id=&quot;registeredVoters&quot;></div>
+                </div>
+              </details>
+            </div>
+            <aside class=&quot;glass control-panel&quot;>
+              <div class=&quot;eyebrow&quot;>ELECTION CONTROL</div>
+              <h2>Voting process</h2>
+              <span id=&quot;phase&quot; class=&quot;phase&quot;>Setup</span>
+              <button id=&quot;startButton&quot; class=&quot;primary full&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+                Start voting
+              </button>
+              <button id=&quot;closeButton&quot; class=&quot;secondary full&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+                Close voting
+              </button>
+              <p class=&quot;hint&quot;>
+                Start with at least two candidates and one approved voter.
+                Closing is permanent.
+              </p>
+            </aside>
+          </div>
+          <template id=&quot;adminCandidateRow&quot;><div class=&quot;admin-row&quot;>
+              <div>
+                <strong class=&quot;candidate-name&quot;></strong><small class=&quot;candidate-position&quot;></small>
+              </div></div></template>
+          <template id=&quot;voterRow&quot;><div class=&quot;admin-row&quot;>
+              <div>
+                <p class=&quot;wallet-address&quot;></p>
+                <small class=&quot;voter-status&quot;></small>
+              </div>
+              <button class=&quot;secondary small-button&quot; type=&quot;button&quot;>
+                Review
+              </button>
+            </div></template>
+        </section>
+      </main>
+    </div>
+    <dialog id=&quot;reviewDialog&quot; aria-labelledby=&quot;reviewTitle&quot;>
+      <div class=&quot;eyebrow&quot;>REVIEW THIS ACTION</div>
+      <h2 id=&quot;reviewTitle&quot;>Review</h2>
+      <p id=&quot;reviewText&quot;></p>
+      <div class=&quot;dialog-actions&quot;>
+        <button id=&quot;cancelAction&quot; class=&quot;secondary&quot; type=&quot;button&quot;>
+          Go back</button><button id=&quot;confirmAction&quot; class=&quot;primary&quot; type=&quot;button&quot;>
+          Confirm
+        </button>
+      </div>
+    </dialog>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Administrator access</h4><p>Management controls become visible after the connected wallet is verified as the owner.</p><div class="snippet-description"><p><strong>Administrator page renderer and controls</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript using the DOM API and Ethers.js</p><p><strong>Source file: </strong>frontend/script/admin.js</p><p><strong>Purpose: </strong>Checks the administrator role, shows the management interface, and controls whether candidate setup, voter approval, starting, or closing actions are available.</p></div><pre>function showAdmin() {
+  byId("adminGate").hidden = app.ready &amp;&amp; app.admin;
+  byId("adminContent").hidden = !app.ready || !app.admin;
+  const setup = app.ready &amp;&amp; app.admin &amp;&amp; app.data.phase === "setup" &amp;&amp; !app.working;
+  for (const control of document.querySelectorAll("form input, form button")) control.disabled = !setup;
+  byId("refreshButton").disabled = !app.configured || app.working;
+  byId("startButton").disabled = !setup || app.data.candidates.length &lt; 2 || app.data.approved &lt; 1;
+  byId("closeButton").disabled = !app.ready || !app.admin || app.working || app.data.phase !== "open";
+  if (!app.ready || !app.admin) return;</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure><p>Setup requires at least two candidates and one approved voter before starting. Candidate fields normalize whitespace and validate byte length. The first candidate fixes the position. A close action asks for review and permanently stops further votes.</p></article><article id="candidates"><h3>Candidate list</h3><p>Read candidate names and positions. Candidate counts are displayed only when the election is closed.</p><figure><div class="annotation-layout"><iframe title="Annotated candidates interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Candidates</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for candidates.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.candidate-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+}
+.candidate-item .candidate-name {
+  font-size: 18px;
+  margin: 0;
+}
+.candidate-item .candidate-votes {
+  margin-left: auto;
+  font-size: 12px;
+  color: #d4deeb;
+  white-space: nowrap;
+}
+.position-label {
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #cad4e1;
+}
+@media (max-width: 480px) {
+  .candidate-item {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .candidate-item .candidate-votes {
+    width: 100%;
+    margin-left: 60px;
+  }
+}
+#candidateList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 16px;
+}
+.candidate-item {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 190px;
+}
+.candidate-item .candidate-votes {
+  margin: 0;
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;candidates&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a aria-current=&quot;page&quot;>Candidates</a>
+          <a>Vote</a>
+          <a>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot;>Voter login</a>
+          <a>Voter registration</a>
+          <a>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section aria-labelledby=&quot;candidatesHeading&quot;>
+          <div class=&quot;page-heading&quot;>
+            <div>
+              <div class=&quot;eyebrow&quot;>YOUR ELECTION</div>
+              <h1 id=&quot;candidatesHeading&quot;>Meet the candidates.</h1>
+              <p>Review the list before making your choice.</p>
+            </div>
+            <a class=&quot;secondary&quot;>Go to voting <span aria-hidden=&quot;true&quot;>→</span></a>
+          </div>
+          <p id=&quot;position&quot; class=&quot;position-label&quot;></p>
+          <div id=&quot;emptyCandidates&quot; class=&quot;glass empty doc-target&quot;>
+            <h2>No candidates yet</h2>
+            <p>The candidate list will appear here.</p>
+          <span class=&quot;doc-bubble&quot;>1</span></div>
+          <div id=&quot;candidateList&quot; class=&quot;rows&quot;></div>
+          <template id=&quot;candidateRow&quot;>
+            <article class=&quot;glass candidate-item&quot;>
+              <span class=&quot;initials&quot; aria-hidden=&quot;true&quot;></span>
+              <div>
+                <h2 class=&quot;candidate-name&quot;></h2>
+                <small class=&quot;candidate-position&quot;></small>
+              </div>
+              <span class=&quot;candidate-votes&quot; hidden=&quot;&quot;></span>
+            </article>
+          </template>
+        </section>
+      </main>
+    </div>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Candidate list</h4><p>Candidate names and positions are inserted as plain text when contract data loads.</p><div class="snippet-description"><p><strong>Candidate list renderer</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript using the DOM API</p><p><strong>Source file: </strong>frontend/script/candidates.js</p><p><strong>Purpose: </strong>Reads the candidate data already loaded from the contract and updates the list. textContent displays names and positions as plain text. Version 2 clones HTML templates for its rows.</p></div><pre>// Page actions for candidates.html. Shared wallet and contract logic loads first.
+app.start(function () {
+  byId("position").textContent = app.data.position;
+  byId("emptyCandidates").hidden = app.data.candidates.length &gt; 0;
+  byId("candidateList").replaceChildren();
+  for (const candidate of app.data.candidates) {
+    const row = app.copy("candidateRow");
+    row.querySelector(".initials").textContent = candidate.name.trim().split(/\s+/).slice(0, 2).map(word =&gt; word[0] || "").join("").toUpperCase();</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure></article><article id="vote"><h3>Voting</h3><p>Choose one candidate, review the choice, and confirm the transaction. A recorded vote disables another vote.</p><figure><div class="annotation-layout"><iframe title="Annotated vote interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Vote</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for vote.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.ballot-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(220px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.ballot-layout.is-blocked {
+  grid-template-columns: 1fr;
+}
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+legend {
+  font-size: 18px;
+  font-weight: 550;
+  margin-bottom: 16px;
+  padding: 0;
+}
+.candidate-option {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 19px 16px;
+  margin: 0 0 13px;
+  border-radius: 17px;
+  border: 1px solid #ffffff22;
+  background: #10151b45;
+  cursor: pointer;
+}
+.candidate-option:has(input:checked) {
+  border-color: #d6e3f180;
+  background: linear-gradient(120deg, #c6d8ef19, #ffffff0b);
+  box-shadow: inset 0 1px 0 #ffffff20;
+}
+.candidate-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #dbe6f4;
+}
+.candidate-option .candidate-name {
+  display: block;
+  font-size: 16px;
+}
+.candidate-option .candidate-position {
+  font-size: 11px;
+}
+.ballot-hint {
+  margin-top: 22px;
+  margin-bottom: 0;
+  font-size: 12px;
+}
+.selection-name {
+  color: #f3f6fa;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.5px;
+  min-height: 64px;
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+}
+.selection-position {
+  font-size: 12px;
+  min-height: 40px;
+  margin-bottom: 24px;
+}
+.selection-panel .hint {
+  font-size: 11px;
+  margin: 18px 0 0;
+}
+.success-symbol {
+  display: grid;
+  place-items: center;
+  margin: 0 auto 22px;
+  width: 56px;
+  height: 56px;
+  border: 1px solid #ffffff3c;
+  background: #ffffff12;
+  border-radius: 20px;
+  color: #e7f1fc;
+  font-size: 28px;
+}
+.eligibility {
+  font-size: 12px;
+  color: #c1cfdf;
+}
+@media (max-width: 1000px) {
+  .ballot-layout {
+    grid-template-columns: 1fr;
+  }
+  .selection-name {
+    min-height: 0;
+  }
+  .selection-position {
+    min-height: 0;
+  }
+}
+@media (max-width: 400px) {
+  .candidate-option {
+    padding: 17px 12px;
+    gap: 12px;
+  }
+}
+.ballot-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+.selection-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.selection-panel > * {
+  margin: 0;
+  min-height: 0;
+}
+.selection-panel .primary {
+  width: auto;
+  margin-left: auto;
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;vote&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a>Candidates</a>
+          <a aria-current=&quot;page&quot;>Vote</a>
+          <a>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot;>Voter login</a>
+          <a>Voter registration</a>
+          <a>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section aria-labelledby=&quot;voteHeading&quot;>
+          <div class=&quot;page-heading&quot;>
+            <div>
+              <div class=&quot;eyebrow&quot;>MAKE YOUR CHOICE</div>
+              <h1 id=&quot;voteHeading&quot;>Your choice matters.</h1>
+              <p id=&quot;position&quot;>Select one candidate.</p>
+            </div>
+            <span id=&quot;eligibility&quot; class=&quot;eligibility&quot;></span>
+          </div>
+          <div id=&quot;ballotLayout&quot; class=&quot;ballot-layout is-blocked&quot;>
+            <div>
+              <div id=&quot;voteGate&quot; class=&quot;glass empty doc-target&quot;>
+                <h2 id=&quot;gateTitle&quot;>Voting is not available yet</h2>
+                <a id=&quot;gateLink&quot; class=&quot;secondary&quot;>View candidates</a>
+              <span class=&quot;doc-bubble&quot;>1</span></div>
+              <form id=&quot;ballotForm&quot; class=&quot;glass&quot; hidden=&quot;&quot;>
+                <fieldset>
+                  <legend>Choose your candidate</legend>
+                  <div id=&quot;candidateChoices&quot;></div>
+                </fieldset>
+                <p class=&quot;ballot-hint&quot;>One candidate. One confirmed vote.</p>
+              </form>
+              <div id=&quot;voteSuccess&quot; class=&quot;glass empty&quot; hidden=&quot;&quot;>
+                <span class=&quot;success-symbol&quot; aria-hidden=&quot;true&quot;>✓</span>
+                <h2>Your vote is recorded</h2>
+                <p>Thank you for participating.</p>
+                <a class=&quot;secondary&quot;>View results status</a>
+              </div>
+            </div>
+            <aside id=&quot;selectionPanel&quot; class=&quot;glass selection-panel&quot; hidden=&quot;&quot;>
+              <div class=&quot;eyebrow&quot;>YOUR SELECTION</div>
+              <p id=&quot;selectionName&quot; class=&quot;selection-name&quot;>
+                No candidate selected
+              </p>
+              <p id=&quot;selectionPosition&quot; class=&quot;selection-position&quot;></p>
+              <button class=&quot;primary full&quot; id=&quot;reviewButton&quot; type=&quot;submit&quot; form=&quot;ballotForm&quot; disabled=&quot;&quot;>
+                Review vote <span aria-hidden=&quot;true&quot;>→</span>
+              </button>
+              <p class=&quot;hint&quot;>Check your choice before confirming.</p>
+            </aside>
+          </div>
+          <template id=&quot;candidateOption&quot;><label class=&quot;candidate-option&quot;><input type=&quot;radio&quot; name=&quot;candidate&quot; required=&quot;&quot;><span><strong class=&quot;candidate-name&quot;></strong><small class=&quot;candidate-position&quot;></small></span></label></template>
+        </section>
+      </main>
+    </div>
+    <dialog id=&quot;reviewDialog&quot; aria-labelledby=&quot;reviewTitle&quot;>
+      <div class=&quot;eyebrow&quot;>REVIEW THIS ACTION</div>
+      <h2 id=&quot;reviewTitle&quot;>Review</h2>
+      <p id=&quot;reviewText&quot;></p>
+      <div class=&quot;dialog-actions&quot;>
+        <button id=&quot;cancelAction&quot; class=&quot;secondary&quot; type=&quot;button&quot;>
+          Go back</button><button id=&quot;confirmAction&quot; class=&quot;primary&quot; type=&quot;button&quot;>
+          Confirm
+        </button>
+      </div>
+    </dialog>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Voting eligibility</h4><p>This area explains why voting is unavailable. An approved voter sees the ballot while the election is open.</p><div class="snippet-description"><p><strong>Ballot eligibility and review controls</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript using the DOM API and Ethers.js</p><p><strong>Source file: </strong>frontend/script/vote.js</p><p><strong>Purpose: </strong>Checks whether the voter may vote, updates the available controls, and reviews the selected candidate before requesting a signed vote transaction.</p></div><pre>  byId("selectionPanel").hidden = !eligible;
+  byId("voteGate").hidden = !!eligible || recorded;
+  byId("voteSuccess").hidden = !recorded;
+  byId("ballotLayout").classList.toggle("is-blocked", !eligible);
+  byId("position").textContent = app.data.position || "Select one candidate.";
+  byId("eligibility").textContent = recorded ? "Vote recorded" : eligible ? "Eligible to vote" : "";
+  let status = ["Voting is not available yet", "View candidates", "candidates.html"];
+  if (app.ready) {
+    if (app.data.phase === "closed") status = ["Voting has closed", "View results", "results.html"];</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure><p>The contract remains the final authority when the interface is bypassed. It checks electionOpen, authorizedVoters, hasVoted, and candidate existence before incrementing counts. <code>contracts/CampusVoting.sol line 104</code></p></article><article id="results"><h3>Final results</h3><p>Keep tabulation hidden until the contract is closed, then display candidate counts and total votes.</p><figure><div class="annotation-layout"><iframe title="Annotated results interface" sandbox="" loading="lazy" srcdoc="<!doctype html><html lang=&quot;en&quot;><head>
+    <meta charset=&quot;UTF-8&quot;>
+    <meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
+    <meta name=&quot;theme-color&quot; content=&quot;#101319&quot;>
+    <title>Results</title>
+    <link rel=&quot;icon&quot; href=&quot;../assets/ballot.svg&quot; type=&quot;image/svg+xml&quot;>
+    <style>/* Page-specific presentation for results.html. Imported rules provide shared styles. */
+/* Shared colors, layout, controls, dialogs, and responsive rules. */
+:root {
+  color-scheme: dark;
+  --background: #101319;
+  --text: #f3f6fa;
+  --muted: #bec7d4;
+  --line: #ffffff24;
+  --glass: linear-gradient(135deg, #ffffff10, #ffffff06);
+  --silver: linear-gradient(155deg, #f2f6fc, #b9c8dc);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 8% 85%, #263a4866, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #34486955, transparent 48%),
+    var(--background);
+  background-attachment: fixed;
+  font:
+    15px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    &quot;Segoe UI&quot;,
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+a {
+  color: #e6edf6;
+  text-underline-offset: 4px;
+}
+a:hover {
+  color: #fff;
+}
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+button,
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d8e9ff;
+  outline-offset: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 550;
+  letter-spacing: -1.4px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 550;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 550;
+}
+p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.skip-link {
+  position: absolute;
+  top: -80px;
+  left: 20px;
+  padding: 12px 18px;
+  background: #e9f0fa;
+  color: #172231;
+  border-radius: 12px;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  max-width: 1320px;
+  min-height: calc(100svh - 48px);
+  margin: 24px auto;
+  border: 1px solid #ffffff26;
+  border-radius: 28px;
+  overflow: clip;
+  background: #10141a22;
+  box-shadow: 0 30px 90px #00000029;
+}
+.sidebar {
+  padding: 30px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  border-right: 1px solid #ffffff18;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03);
+  backdrop-filter: blur(26px);
+}
+.home-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid #ffffff40;
+  background: linear-gradient(145deg, #ffffff24, #ffffff08);
+  box-shadow:
+    inset 0 1px 0 #ffffff33,
+    0 6px 20px #00000026;
+  text-decoration: none;
+  margin-left: 12px;
+}
+.home-mark span {
+  font-size: 24px;
+  line-height: 1;
+  color: #e8edf5;
+}
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin: 0 14px 12px;
+  color: #bac4d1;
+}
+.navigation {
+  display: grid;
+  gap: 8px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #cad2dd;
+  text-decoration: none;
+  font-size: 14px;
+}
+.navigation a[aria-current=&quot;page&quot;] {
+  color: #fff;
+  background: linear-gradient(125deg, #ffffff1b, #ffffff08);
+  border-color: #ffffff2b;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 6px 16px #00000018;
+}
+.nav-symbol {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: #d5dfec;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 14px 0;
+  border-top: 1px solid #ffffff14;
+}
+.sidebar-bottom a,
+.text-button {
+  font-size: 12px;
+  color: #c1cbd8;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+.sidebar-bottom a:hover,
+.text-button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.workspace {
+  min-width: 0;
+  padding: 32px 36px 44px;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 42px;
+  min-height: 32px;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #bfc8d6;
+}
+.breadcrumb span {
+  color: #f2f5fa;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff28;
+  border-radius: 30px;
+  background: #ffffff09;
+  box-shadow: inset 0 1px 0 #ffffff12;
+  font-size: 11px;
+  color: #e6edf6;
+}
+.status::before {
+  content: &quot;&quot;;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #c1cfdf;
+}
+.status[data-state=&quot;open&quot;]::before {
+  background: #a2e5c5;
+  box-shadow: 0 0 12px #a2e5c544;
+}
+.glass {
+  border-radius: 23px;
+  border: 1px solid #ffffff25;
+  border-top-color: #ffffff42;
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 18px 46px #00000022;
+  padding: 26px;
+  min-width: 0;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+}
+.page-heading p {
+  margin-bottom: 0;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: #cad4e1;
+  margin-bottom: 17px;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-height: 46px;
+  border-radius: 28px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 550;
+}
+.primary {
+  color: #192431;
+  background: var(--silver);
+  border: 1px solid #ffffff80;
+  box-shadow:
+    inset 0 1px 0 #ffffffa3,
+    0 8px 24px #00000029;
+}
+.primary:hover {
+  color: #101a27;
+  filter: brightness(1.06);
+}
+.secondary {
+  color: #e6edf6;
+  background: #ffffff09;
+  border: 1px solid #ffffff30;
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+.secondary:hover {
+  background: #ffffff14;
+}
+.full {
+  width: 100%;
+}
+.small-button {
+  min-height: 40px;
+  font-size: 12px;
+  padding: 8px 15px;
+}
+.notice {
+  padding: 14px 18px;
+  margin-bottom: 26px;
+  color: #e2eaf5;
+  background: #c5d7ee10;
+  border: 1px solid #c5d7ee33;
+  border-radius: 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice.is-error {
+  border-color: #e4cf9959;
+  background: #d6bf8510;
+  color: #f0dfb5;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: #e1e8f2;
+  margin-bottom: 8px;
+}
+input:not([type=&quot;radio&quot;]) {
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ffffff2d;
+  border-radius: 12px;
+  background: #10151b65;
+  color: #f3f6fa;
+  font-size: 15px;
+}
+input::placeholder {
+  color: #9faebe;
+}
+input:read-only {
+  color: #c1cbd8;
+  background: #ffffff07;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.empty p {
+  margin-bottom: 24px;
+}
+.divider {
+  height: 1px;
+  background: #ffffff1c;
+  margin: 26px 0;
+}
+.rows {
+  display: grid;
+  gap: 12px;
+}
+.candidate-name {
+  color: #f3f6fa;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.candidate-position {
+  display: block;
+  margin-top: 4px;
+}
+.initials {
+  display: grid;
+  place-items: center;
+  height: 46px;
+  width: 46px;
+  border-radius: 15px;
+  border: 1px solid #ffffff27;
+  background: linear-gradient(140deg, #ffffff1b, #ffffff05);
+  font-size: 13px;
+  color: #e5edf7;
+  flex-shrink: 0;
+}
+.wallet-address {
+  font:
+    12px/1.6 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+  color: #e4ecf6;
+}
+dialog {
+  width: min(470px, calc(100% - 32px));
+  border: 1px solid #ffffff40;
+  border-radius: 25px;
+  padding: 30px;
+  background: linear-gradient(140deg, #29323e, #1b222e);
+  color: #f3f6fa;
+  box-shadow:
+    0 30px 100px #00000070,
+    inset 0 1px 0 #ffffff25;
+}
+dialog::backdrop {
+  background: #060a10aa;
+  backdrop-filter: blur(7px);
+}
+dialog p {
+  overflow-wrap: anywhere;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+.sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 1320px) {
+  .app-shell {
+    margin: 16px;
+    min-height: calc(100svh - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+  .workspace {
+    padding: 26px;
+  }
+  .sidebar {
+    padding: 26px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    margin: 10px;
+    border-radius: 24px;
+    min-height: calc(100svh - 20px);
+  }
+  .sidebar {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #ffffff1b;
+  }
+  .home-mark {
+    margin: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+  .nav-label {
+    display: none;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .navigation a {
+    padding: 9px 11px;
+    font-size: 12px;
+    gap: 7px;
+    min-height: 42px;
+  }
+  .nav-symbol {
+    display: none;
+  }
+  .sidebar-bottom {
+    width: 100%;
+    padding: 12px 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .workspace {
+    padding: 25px 20px 34px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    gap: 12px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .glass {
+    padding: 23px;
+  }
+}
+@media (max-width: 400px) {
+  .workspace {
+    padding: 24px 16px 30px;
+  }
+  .glass {
+    padding: 20px;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  input:not([type=&quot;radio&quot;]) {
+    font-size: 16px;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .sidebar {
+    background: #202832;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .sidebar {
+    backdrop-filter: none;
+    background: #202832;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.app-shell {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 24px clamp(16px, 4vw, 62px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+/* A single trigger opens the browser's native dismissible navigation panel. */
+.menu-corner {
+  display: flex;
+  justify-content: flex-end;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--text);
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #343c48, #1a2029);
+}
+#pageMenu {
+  position: fixed;
+  inset: 76px max(16px, calc((100vw - 1180px) / 2 + 62px)) auto auto;
+  margin: 0;
+  padding: 10px;
+  width: min(248px, calc(100vw - 32px));
+  max-height: calc(100dvh - 92px);
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid #ffffff38;
+  border-radius: 18px;
+  background: #202731f5;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 56px #0008;
+}
+#pageMenu a,
+#pageMenu button {
+  display: block;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: 9px;
+}
+#pageMenu a:hover,
+#pageMenu a[aria-current] {
+  background: #ffffff14;
+}
+#pageMenu a[aria-current] {
+  border-left: 3px solid #dce6ef;
+}
+#pageMenu #loginLink {
+  border-top: 1px solid var(--line);
+}
+.workspace {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+.topbar {
+  min-height: 0;
+  margin: 16px 0;
+  justify-content: flex-end;
+}
+.page-heading {
+  margin: clamp(28px, 6vw, 80px) 0 30px;
+}
+.page-heading h1 {
+  font-size: clamp(40px, 6vw, 76px);
+}
+@media (max-width: 650px) {
+  .app-shell {
+    padding: 16px;
+  }
+}
+
+.results-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 22px;
+  margin-bottom: 25px;
+}
+.total {
+  text-align: right;
+}
+.total strong {
+  display: block;
+  font-size: 44px;
+  letter-spacing: -1.4px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.total small {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 18px 10px;
+  text-align: left;
+  border-bottom: 1px solid #ffffff1d;
+  overflow-wrap: anywhere;
+}
+th {
+  font-size: 12px;
+  font-weight: 500;
+  color: #bac6d7;
+}
+td:last-child,
+th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.results-empty-symbol {
+  font-size: 36px;
+  margin: 0 0 20px;
+  color: #d8e4f3;
+}
+@media (max-width: 450px) {
+  .results-head {
+    flex-direction: column;
+  }
+  .total {
+    text-align: left;
+  }
+  .total strong {
+    font-size: 36px;
+  }
+}
+</style>
+    <!-- Load the wallet library and shared code before this page script. -->
+    
+    
+    
+    
+  <style>.doc-target{position:relative!important;outline:2px solid #00718b!important;outline-offset:4px!important}.doc-bubble{position:absolute!important;z-index:9999!important;right:-9px!important;top:-19px!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border-radius:50%!important;background:#00718b!important;color:white!important;border:3px solid white!important;font:bold 15px system-ui!important;box-shadow:0 3px 10px #0004!important}.doc-bubble:after{content:&quot;&quot;;position:absolute;bottom:-8px;left:7px;border-width:7px 5px 0;border-style:solid;border-color:#00718b transparent transparent}body{pointer-events:none}</style></head>
+  <body data-page=&quot;results&quot;>
+    <a class=&quot;skip-link&quot;>Skip to content</a>
+    <div class=&quot;app-shell&quot;>
+      <div class=&quot;menu-corner&quot;>
+        <button class=&quot;menu-trigger&quot; type=&quot;button&quot; popovertarget=&quot;pageMenu&quot;>
+          <span aria-hidden=&quot;true&quot;>☰</span> Menu
+        </button>
+        <nav id=&quot;pageMenu&quot; popover=&quot;&quot; aria-label=&quot;Main navigation&quot;>
+          <a>Candidates</a>
+          <a>Vote</a>
+          <a aria-current=&quot;page&quot;>Results</a>
+          <a id=&quot;manageLink&quot; hidden=&quot;&quot;>Manage election</a>
+          <a id=&quot;loginLink&quot;>Voter login</a>
+          <a>Voter registration</a>
+          <a>Admin access</a>
+          <button hidden=&quot;&quot; id=&quot;logoutButton&quot; class=&quot;text-button&quot;>Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id=&quot;mainContent&quot; class=&quot;workspace&quot; tabindex=&quot;-1&quot;>
+        <header class=&quot;topbar&quot;>
+          <span id=&quot;electionStatus&quot; class=&quot;status&quot; hidden=&quot;&quot;></span>
+        </header>
+        <div id=&quot;notice&quot; class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden=&quot;&quot;></div>
+
+        <section aria-labelledby=&quot;resultsHeading&quot;>
+          <div class=&quot;page-heading&quot;>
+            <div>
+              <div class=&quot;eyebrow&quot;>FINAL TABULATION</div>
+              <h1 id=&quot;resultsHeading&quot;>Election results.</h1>
+              <p>Final vote counts after voting closes.</p>
+            </div>
+            <button id=&quot;refreshButton&quot; class=&quot;secondary&quot; type=&quot;button&quot; disabled=&quot;&quot;>
+              Refresh results <span aria-hidden=&quot;true&quot;>↻</span>
+            </button>
+          </div>
+          <div id=&quot;resultsLocked&quot; class=&quot;glass empty doc-target&quot;>
+            <div class=&quot;results-empty-symbol&quot; aria-hidden=&quot;true&quot;>◷</div>
+            <h2>Results are not available yet</h2>
+            <p>Results appear after voting closes.</p>
+            <a class=&quot;secondary&quot;>View candidates</a>
+          <span class=&quot;doc-bubble&quot;>1</span></div>
+          <div id=&quot;resultsContent&quot; class=&quot;glass&quot; hidden=&quot;&quot;>
+            <div class=&quot;results-head&quot;>
+              <div>
+                <div class=&quot;eyebrow&quot;>VOTING CLOSED</div>
+                <h2 id=&quot;position&quot;></h2>
+              </div>
+              <div class=&quot;total&quot;>
+                <strong id=&quot;totalVotes&quot;>0</strong><small>confirmed votes</small>
+              </div>
+            </div>
+            <div class=&quot;table-wrap&quot;>
+              <table>
+                <caption class=&quot;sr-only&quot;>
+                  Final candidate vote counts
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope=&quot;col&quot;>Candidate</th>
+                    <th scope=&quot;col&quot;>Votes</th>
+                  </tr>
+                </thead>
+                <tbody id=&quot;resultRows&quot;></tbody>
+              </table>
+            </div>
+          </div>
+          <template id=&quot;resultRow&quot;><tr>
+              <td class=&quot;candidate-name&quot;></td>
+              <td class=&quot;candidate-count&quot;></td></tr></template>
+        </section>
+      </main>
+    </div>
+  
+
+</body></html>"></iframe><div class="annotation-notes"><article><h4>1. Results availability</h4><p>The table is shown only after the contract reports that voting is closed.</p><div class="snippet-description"><p><strong>Final results renderer</strong></p><p><strong>Language: </strong>JavaScript</p><p><strong>Technology: </strong>JavaScript using the DOM API</p><p><strong>Source file: </strong>frontend/script/results.js</p><p><strong>Purpose: </strong>Checks the closed-election phase before revealing the results table. It fills the table with candidate vote counts and the confirmed total loaded from the contract.</p></div><pre>app.start(function () {
+  const available = app.ready &amp;&amp; app.data.phase === "closed";
+  byId("resultsLocked").hidden = available;
+  byId("resultsContent").hidden = !available;
+  byId("refreshButton").disabled = !app.configured || app.working;
+  if (!available) return;
+  byId("position").textContent = app.data.position;
+  byId("totalVotes").textContent = app.data.total;
+  byId("resultRows").replaceChildren();</pre></article></div></div><figcaption>HTML and CSS preview from the application source. Numbered bubbles identify the explained controls. This preview shows the page before a deployed contract is connected.</figcaption></figure><p>The frontend checks the closed phase before displaying the table. Counts are public on the blockchain throughout the election. The interface hides live tabulation but the contract does not implement a secret ballot.</p></article><article id="transactions"><h3>Wallet requests and transaction confirmation</h3><p>The frontend first checks that MetaMask still exposes the selected wallet and configured network. It shows “Confirm in MetaMask” while requesting the signature, then “Recording. Please wait.” until transaction.wait() returns a successful receipt. Cancelled or failed requests produce an error message. A confirmed transaction triggers a fresh election read.</p><div class="snippet-description"><p><strong>Shared transaction handler</strong></p><p>Language: JavaScript. Technology: Ethers.js and the MetaMask provider. Source file: frontend/script/common.js. Purpose: recheck the wallet and network, request a signed transaction, and wait for its receipt before showing success.</p></div><pre>118    send: async function (method, args, success, after) {
+119      if (app.working || !app.ready || !app.account) return;
+120      const wallet = app.account;
+121      app.working = true;
+122      app.draw();
+123      try {
+124        if (!await walletMatches(wallet)) {
+125          app.reset(); app.note("Wallet changed. Log in again.", true); return;
+126        }
+127        const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+128        const writer = app.contract.connect(provider.getSigner(wallet));
+129        app.note("Confirm in MetaMask.");</pre><p><code>frontend/script/common.js line 118</code></p><p>Repeated reads use a request revision so a response for an earlier wallet cannot replace current state. Reads use one block number for consistency. Account, network, and disconnect events clear the session. The periodic refresh reads the contract every 5 seconds while the page is visible and idle. <code>frontend/script/common.js line 11</code></p></article></section><section aria-labelledby="backend"><h2 id="backend">Backend</h2><p>CampusVoting.sol enforces election permissions, records each accepted vote, and maintains the candidate totals.</p><nav class="topics" aria-label="Backend topics"><a href="#rules">Election rules and vote recording</a><a href="#setup">Deployment and manual test</a></nav><article id="rules"><h3>Election rules and vote recording</h3><table><tbody><tr><th>Rule</th><th>Code reference</th></tr><tr><td>The deployer owns the election</td><td><code>contracts/CampusVoting.sol line 36</code></td></tr><tr><td>Candidate and voter setup ends permanently when voting starts</td><td><code>contracts/CampusVoting.sol line 38</code></td></tr><tr><td>Only the owner adds candidates for the same position</td><td><code>contracts/CampusVoting.sol line 53</code></td></tr><tr><td>Only the owner approves wallets</td><td><code>contracts/CampusVoting.sol line 72</code></td></tr><tr><td>An approved wallet can vote once while the election is open</td><td><code>contracts/CampusVoting.sol line 104</code></td></tr><tr><td>Closing is permanent</td><td><code>contracts/CampusVoting.sol line 96</code></td></tr></tbody></table><div class="snippet-description"><p><strong>On-chain vote function</strong></p><p>Language: Solidity. Technology: Ethereum smart contract. Source file: contracts/CampusVoting.sol. Purpose: enforce open voting, wallet authorization, one vote per wallet, and valid candidate selection before updating vote counts.</p></div><pre>104      function vote(uint256 _candidateId) external {
+105          require(electionOpen, "Election is not open");
+106          require(authorizedVoters[msg.sender], "Your wallet is not authorized");
+107          require(!hasVoted[msg.sender], "Your vote is already recorded");
+108          require(candidates[_candidateId].exists, "Invalid candidate");
+109          hasVoted[msg.sender] = true;
+110          candidates[_candidateId].voteCount++;
+111          totalVotes++;
+112          emit VoteCast(msg.sender, _candidateId);
+113      }</pre><p><code>contracts/CampusVoting.sol line 104</code></p></article><article id="setup"><h3>Deployment and manual test</h3><p>Serve the frontend through HTTP using a local server. Open frontend/html/setup.html for the detailed guide. Compile and deploy CampusVoting.sol using the administrator wallet on Sepolia, then copy its address to settings.address in frontend/script/config.js. Keep frontend/abi.json synchronized with the compiled contract interface.</p><p>The source still contains the deployment-address placeholder. Wallet actions remain disabled until a valid address is configured. Use a separate contract deployment for each version to give each test its own fresh election.</p><table><tbody><tr><th>Account and action</th><th>Expected result</th><th>Chrome test status</th></tr><tr><td>Account 1 adds Juan Dela Cruz and Maria Santos</td><td>Both appear for Student Council President</td><td>Pending</td></tr><tr><td>Account 1 authorizes Accounts 2 and 3</td><td>Both wallets become eligible</td><td>Pending</td></tr><tr><td>Account 1 starts voting</td><td>Candidate and voter setup lock</td><td>Pending</td></tr><tr><td>Account 2 votes for Juan Dela Cruz</td><td>Juan receives one vote</td><td>Pending</td></tr><tr><td>Account 3 votes for Maria Santos</td><td>Maria receives one vote</td><td>Pending</td></tr><tr><td>Account 2 attempts another vote</td><td>The UI prevents another vote and the contract rejects duplicates</td><td>Pending</td></tr><tr><td>Account 1 closes voting</td><td>Voting stops permanently</td><td>Pending</td></tr><tr><td>Read final results</td><td>Juan 1, Maria 1, total 2</td><td>Pending</td></tr></tbody></table><p>Local verification used a local Ethereum chain and simulated wallet requests to exercise registration, authorization, transaction confirmation, duplicate-vote prevention, role restrictions, closed results, and safe text rendering. These checks do not replace the pending three-account MetaMask run.</p><p class="note">Each version passed 50 local contract and frontend checks. The Chrome and MetaMask three-account workflow remains pending. A deployment request was opened in Remix, but its confirmation and resulting contract address have not been verified.</p></article></section></main></body></html>

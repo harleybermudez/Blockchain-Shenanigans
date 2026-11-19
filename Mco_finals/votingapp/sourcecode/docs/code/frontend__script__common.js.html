@@ -1,0 +1,187 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>frontend/script/common.js</title><style>body{font:14px/1.7 Consolas,monospace;padding:30px;background:#17212e;color:#f0f4fa}a{color:#b8d6ff}span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}span:target{background:#43536b}h1{font:22px system-ui}</style><a href="../documentation.html">Back to documentation</a><h1>frontend/script/common.js</h1><pre><span id="L1"><a href="#L1">   1</a>  // Recheck the selected account and chain before restoring a session or requesting a signature.</span>
+<span id="L2"><a href="#L2">   2</a>  async function walletMatches(wallet) {</span>
+<span id="L3"><a href="#L3">   3</a>    const accounts = await window.ethereum.request({ method: &quot;eth_accounts&quot; });</span>
+<span id="L4"><a href="#L4">   4</a>    const chain = await window.ethereum.request({ method: &quot;eth_chainId&quot; });</span>
+<span id="L5"><a href="#L5">   5</a>    return accounts.length &gt; 0 &amp;&amp; app.same(wallet, accounts[0]) &amp;&amp; Number(chain) === settings.chainId;</span>
+<span id="L6"><a href="#L6">   6</a>  }</span>
+<span id="L7"><a href="#L7">   7</a>  // The app object holds shared state and methods. HTML templates define the rows.</span>
+<span id="L8"><a href="#L8">   8</a>  function byId(id) { return document.getElementById(id); }</span>
+<span id="L9"><a href="#L9">   9</a>  const app = {</span>
+<span id="L10"><a href="#L10">  10</a>    account: &quot;&quot;, admin: false, registered: false, allowed: false, voted: false,</span>
+<span id="L11"><a href="#L11">  11</a>    configured: false, ready: false, working: false, revision: 0,</span>
+<span id="L12"><a href="#L12">  12</a>    reader: null, contract: null, update: function () {},</span>
+<span id="L13"><a href="#L13">  13</a>    data: { phase: &quot;setup&quot;, candidates: [], voters: [], position: &quot;&quot;, total: 0, approved: 0 },</span>
+<span id="L14"><a href="#L14">  14</a>    session: function () { return &quot;voting-v2:&quot; + settings.address; },</span>
+<span id="L15"><a href="#L15">  15</a>    same: function (a, b) { return a.toLowerCase() === b.toLowerCase(); },</span>
+<span id="L16"><a href="#L16">  16</a>    copy: function (id) { return byId(id).content.firstElementChild.cloneNode(true); },</span>
+<span id="L17"><a href="#L17">  17</a>    note: function (text, error = false) {</span>
+<span id="L18"><a href="#L18">  18</a>      byId(&quot;notice&quot;).hidden = false;</span>
+<span id="L19"><a href="#L19">  19</a>      byId(&quot;notice&quot;).classList.toggle(&quot;is-error&quot;, error);</span>
+<span id="L20"><a href="#L20">  20</a>      byId(&quot;notice&quot;).setAttribute(&quot;role&quot;, error ? &quot;alert&quot; : &quot;status&quot;);</span>
+<span id="L21"><a href="#L21">  21</a>      byId(&quot;notice&quot;).textContent = text;</span>
+<span id="L22"><a href="#L22">  22</a>    },</span>
+<span id="L23"><a href="#L23">  23</a>    draw: function () {</span>
+<span id="L24"><a href="#L24">  24</a>      byId(&quot;electionStatus&quot;).hidden = !app.configured;</span>
+<span id="L25"><a href="#L25">  25</a>      byId(&quot;electionStatus&quot;).textContent = !app.ready ? &quot;Election unavailable&quot; :</span>
+<span id="L26"><a href="#L26">  26</a>        app.data.phase === &quot;open&quot; ? &quot;Voting open&quot; : app.data.phase === &quot;closed&quot; ? &quot;Voting closed&quot; : &quot;Voting not started&quot;;</span>
+<span id="L27"><a href="#L27">  27</a>      byId(&quot;electionStatus&quot;).dataset.state = app.data.phase;</span>
+<span id="L28"><a href="#L28">  28</a>      byId(&quot;manageLink&quot;).hidden = !app.admin;</span>
+<span id="L29"><a href="#L29">  29</a>      byId(&quot;logoutButton&quot;).hidden = !app.account;</span>
+<span id="L30"><a href="#L30">  30</a>      byId(&quot;loginLink&quot;).hidden = !!app.account;</span>
+<span id="L31"><a href="#L31">  31</a>      app.update();</span>
+<span id="L32"><a href="#L32">  32</a>    },</span>
+<span id="L33"><a href="#L33">  33</a>    // Clear role and eligibility data and invalidate any outstanding read.</span>
+<span id="L34"><a href="#L34">  34</a>    reset: function () {</span>
+<span id="L35"><a href="#L35">  35</a>      app.revision++;</span>
+<span id="L36"><a href="#L36">  36</a>      sessionStorage.removeItem(app.session());</span>
+<span id="L37"><a href="#L37">  37</a>      app.account = &quot;&quot;;</span>
+<span id="L38"><a href="#L38">  38</a>      app.admin = app.registered = app.allowed = app.voted = false;</span>
+<span id="L39"><a href="#L39">  39</a>      app.data.voters = [];</span>
+<span id="L40"><a href="#L40">  40</a>      if (byId(&quot;reviewDialog&quot;) &amp;&amp; byId(&quot;reviewDialog&quot;).open) byId(&quot;reviewDialog&quot;).close();</span>
+<span id="L41"><a href="#L41">  41</a>      app.draw();</span>
+<span id="L42"><a href="#L42">  42</a>    },</span>
+<span id="L43"><a href="#L43">  43</a>    // Restore a saved wallet only when MetaMask still exposes it on the configured chain.</span>
+<span id="L44"><a href="#L44">  44</a>    restore: async function () {</span>
+<span id="L45"><a href="#L45">  45</a>      const saved = sessionStorage.getItem(app.session());</span>
+<span id="L46"><a href="#L46">  46</a>      if (!saved || !window.ethereum) return;</span>
+<span id="L47"><a href="#L47">  47</a>      if (await walletMatches(saved)) app.account = saved;</span>
+<span id="L48"><a href="#L48">  48</a>      else sessionStorage.removeItem(app.session());</span>
+<span id="L49"><a href="#L49">  49</a>    },</span>
+<span id="L50"><a href="#L50">  50</a>    // Read a single block and ignore stale responses after an account or network change.</span>
+<span id="L51"><a href="#L51">  51</a>    read: async function () {</span>
+<span id="L52"><a href="#L52">  52</a>      if (!app.configured || !app.contract) return;</span>
+<span id="L53"><a href="#L53">  53</a>      // A newer request or wallet change makes this response obsolete.</span>
+<span id="L54"><a href="#L54">  54</a>      const revision = ++app.revision;</span>
+<span id="L55"><a href="#L55">  55</a>      const wallet = app.account;</span>
+<span id="L56"><a href="#L56">  56</a>      try {</span>
+<span id="L57"><a href="#L57">  57</a>        const block = { blockTag: await app.reader.getBlockNumber() };</span>
+<span id="L58"><a href="#L58">  58</a>        const info = await Promise.all([</span>
+<span id="L59"><a href="#L59">  59</a>          app.contract.owner(block), app.contract.getElectionStatus(block), app.contract.electionClosed(block),</span>
+<span id="L60"><a href="#L60">  60</a>          app.contract.getCandidateCount(block), app.contract.getTotalVotes(block),</span>
+<span id="L61"><a href="#L61">  61</a>          app.contract.electionPosition(block), app.contract.authorizedVoterCount(block)</span>
+<span id="L62"><a href="#L62">  62</a>        ]);</span>
+<span id="L63"><a href="#L63">  63</a>        const candidates = [], voters = [];</span>
+<span id="L64"><a href="#L64">  64</a>        for (let id = 1; id &lt;= Number(info[3]); id++) {</span>
+<span id="L65"><a href="#L65">  65</a>          const c = await app.contract.getCandidate(id, block);</span>
+<span id="L66"><a href="#L66">  66</a>          candidates.push({ id: Number(c.id), name: c.name, position: c.position, votes: Number(c.voteCount) });</span>
+<span id="L67"><a href="#L67">  67</a>        }</span>
+<span id="L68"><a href="#L68">  68</a>        const admin = !!wallet &amp;&amp; app.same(wallet, info[0]);</span>
+<span id="L69"><a href="#L69">  69</a>        let flags = [false, false, false];</span>
+<span id="L70"><a href="#L70">  70</a>        if (wallet) flags = await Promise.all([</span>
+<span id="L71"><a href="#L71">  71</a>          app.contract.registeredVoters(wallet, block), app.contract.authorizedVoters(wallet, block), app.contract.hasVoted(wallet, block)</span>
+<span id="L72"><a href="#L72">  72</a>        ]);</span>
+<span id="L73"><a href="#L73">  73</a>        if (admin &amp;&amp; document.body.dataset.page === &quot;admin&quot;) {</span>
+<span id="L74"><a href="#L74">  74</a>          for (const address of await app.contract.getRegisteredVoters(block)) {</span>
+<span id="L75"><a href="#L75">  75</a>            voters.push({ address: address, approved: await app.contract.authorizedVoters(address, block) });</span>
+<span id="L76"><a href="#L76">  76</a>          }</span>
+<span id="L77"><a href="#L77">  77</a>        }</span>
+<span id="L78"><a href="#L78">  78</a>        if (revision !== app.revision || wallet !== app.account) return;</span>
+<span id="L79"><a href="#L79">  79</a>        app.data = { phase: info[2] ? &quot;closed&quot; : info[1] ? &quot;open&quot; : &quot;setup&quot;, candidates: candidates,</span>
+<span id="L80"><a href="#L80">  80</a>          voters: voters, total: Number(info[4]), position: info[5], approved: Number(info[6]) };</span>
+<span id="L81"><a href="#L81">  81</a>        app.admin = admin;</span>
+<span id="L82"><a href="#L82">  82</a>        [app.registered, app.allowed, app.voted] = flags;</span>
+<span id="L83"><a href="#L83">  83</a>        app.ready = true;</span>
+<span id="L84"><a href="#L84">  84</a>        app.draw();</span>
+<span id="L85"><a href="#L85">  85</a>      } catch {</span>
+<span id="L86"><a href="#L86">  86</a>        if (revision !== app.revision || wallet !== app.account) return;</span>
+<span id="L87"><a href="#L87">  87</a>        app.ready = false;</span>
+<span id="L88"><a href="#L88">  88</a>        app.draw();</span>
+<span id="L89"><a href="#L89">  89</a>        app.note(&quot;Could not load the election. Refresh to try again.&quot;, true);</span>
+<span id="L90"><a href="#L90">  90</a>      }</span>
+<span id="L91"><a href="#L91">  91</a>    },</span>
+<span id="L92"><a href="#L92">  92</a>    // Connect MetaMask, verify the requested role, and route the voter or administrator.</span>
+<span id="L93"><a href="#L93">  93</a>    connect: async function (role) {</span>
+<span id="L94"><a href="#L94">  94</a>      if (app.working || !app.configured) return;</span>
+<span id="L95"><a href="#L95">  95</a>      app.working = true;</span>
+<span id="L96"><a href="#L96">  96</a>      app.draw();</span>
+<span id="L97"><a href="#L97">  97</a>      try {</span>
+<span id="L98"><a href="#L98">  98</a>        if (!window.ethereum) { app.note(&quot;Install MetaMask to continue.&quot;, true); return; }</span>
+<span id="L99"><a href="#L99">  99</a>        const accounts = await window.ethereum.request({ method: &quot;eth_requestAccounts&quot; });</span>
+<span id="L100"><a href="#L100"> 100</a>        const chain = await window.ethereum.request({ method: &quot;eth_chainId&quot; });</span>
+<span id="L101"><a href="#L101"> 101</a>        if (Number(chain) !== settings.chainId) { app.note(&quot;Select &quot; + settings.network + &quot; in MetaMask.&quot;, true); return; }</span>
+<span id="L102"><a href="#L102"> 102</a>        const owner = await app.contract.owner();</span>
+<span id="L103"><a href="#L103"> 103</a>        const ownerWallet = app.same(accounts[0], owner);</span>
+<span id="L104"><a href="#L104"> 104</a>        if ((role === &quot;admin&quot;) !== ownerWallet) {</span>
+<span id="L105"><a href="#L105"> 105</a>          app.note(ownerWallet ? &quot;Use electoral admin login.&quot; : &quot;Select the admin wallet.&quot;, true);</span>
+<span id="L106"><a href="#L106"> 106</a>          return;</span>
+<span id="L107"><a href="#L107"> 107</a>        }</span>
+<span id="L108"><a href="#L108"> 108</a>        app.account = accounts[0];</span>
+<span id="L109"><a href="#L109"> 109</a>        sessionStorage.setItem(app.session(), app.account);</span>
+<span id="L110"><a href="#L110"> 110</a>        await app.read();</span>
+<span id="L111"><a href="#L111"> 111</a>        if (!app.ready) return;</span>
+<span id="L112"><a href="#L112"> 112</a>        if (role === &quot;signup&quot;) app.note(app.registered ? &quot;Wallet already registered.&quot; : &quot;Wallet connected.&quot;);</span>
+<span id="L113"><a href="#L113"> 113</a>        else window.location.href = role === &quot;admin&quot; ? &quot;admin.html&quot; : app.registered ? &quot;vote.html&quot; : &quot;signup.html&quot;;</span>
+<span id="L114"><a href="#L114"> 114</a>      } catch { app.note(&quot;Could not connect. Check MetaMask and try again.&quot;, true); }</span>
+<span id="L115"><a href="#L115"> 115</a>      finally { app.working = false; app.draw(); }</span>
+<span id="L116"><a href="#L116"> 116</a>    },</span>
+<span id="L117"><a href="#L117"> 117</a>    // Recheck wallet and chain, then wait for a successful transaction receipt.</span>
+<span id="L118"><a href="#L118"> 118</a>    send: async function (method, args, success, after) {</span>
+<span id="L119"><a href="#L119"> 119</a>      if (app.working || !app.ready || !app.account) return;</span>
+<span id="L120"><a href="#L120"> 120</a>      const wallet = app.account;</span>
+<span id="L121"><a href="#L121"> 121</a>      app.working = true;</span>
+<span id="L122"><a href="#L122"> 122</a>      app.draw();</span>
+<span id="L123"><a href="#L123"> 123</a>      try {</span>
+<span id="L124"><a href="#L124"> 124</a>        if (!await walletMatches(wallet)) {</span>
+<span id="L125"><a href="#L125"> 125</a>          app.reset(); app.note(&quot;Wallet changed. Log in again.&quot;, true); return;</span>
+<span id="L126"><a href="#L126"> 126</a>        }</span>
+<span id="L127"><a href="#L127"> 127</a>        const provider = new ethers.providers.Web3Provider(window.ethereum, &quot;any&quot;);</span>
+<span id="L128"><a href="#L128"> 128</a>        const writer = app.contract.connect(provider.getSigner(wallet));</span>
+<span id="L129"><a href="#L129"> 129</a>        app.note(&quot;Confirm in MetaMask.&quot;);</span>
+<span id="L130"><a href="#L130"> 130</a>        const transaction = await writer[method](...args);</span>
+<span id="L131"><a href="#L131"> 131</a>        app.note(&quot;Recording… Please wait.&quot;);</span>
+<span id="L132"><a href="#L132"> 132</a>        const receipt = await transaction.wait();</span>
+<span id="L133"><a href="#L133"> 133</a>        if (receipt.status !== 1) throw new Error();</span>
+<span id="L134"><a href="#L134"> 134</a>        await app.read();</span>
+<span id="L135"><a href="#L135"> 135</a>        app.note(wallet === app.account ? success : &quot;Transaction confirmed. Log in again.&quot;);</span>
+<span id="L136"><a href="#L136"> 136</a>        if (wallet === app.account &amp;&amp; after) after();</span>
+<span id="L137"><a href="#L137"> 137</a>      } catch {</span>
+<span id="L138"><a href="#L138"> 138</a>        app.note(&quot;Action could not be confirmed. Refresh before trying again.&quot;, true);</span>
+<span id="L139"><a href="#L139"> 139</a>        await app.read();</span>
+<span id="L140"><a href="#L140"> 140</a>      } finally { app.working = false; app.draw(); }</span>
+<span id="L141"><a href="#L141"> 141</a>    },</span>
+<span id="L142"><a href="#L142"> 142</a>    // Ask the user to review an action before sending its transaction.</span>
+<span id="L143"><a href="#L143"> 143</a>    confirm: function (title, description, action) {</span>
+<span id="L144"><a href="#L144"> 144</a>      if (app.working) return;</span>
+<span id="L145"><a href="#L145"> 145</a>      byId(&quot;reviewTitle&quot;).textContent = title;</span>
+<span id="L146"><a href="#L146"> 146</a>      byId(&quot;reviewText&quot;).textContent = description;</span>
+<span id="L147"><a href="#L147"> 147</a>      byId(&quot;confirmAction&quot;).onclick = function () { byId(&quot;reviewDialog&quot;).close(); action(); };</span>
+<span id="L148"><a href="#L148"> 148</a>      byId(&quot;reviewDialog&quot;).showModal();</span>
+<span id="L149"><a href="#L149"> 149</a>      byId(&quot;cancelAction&quot;).focus();</span>
+<span id="L150"><a href="#L150"> 150</a>    },</span>
+<span id="L151"><a href="#L151"> 151</a>    // Load frontend/abi.json and start the page after its render callback is registered.</span>
+<span id="L152"><a href="#L152"> 152</a>    start: async function (update) {</span>
+<span id="L153"><a href="#L153"> 153</a>      app.update = update;</span>
+<span id="L154"><a href="#L154"> 154</a>      app.draw();</span>
+<span id="L155"><a href="#L155"> 155</a>      if (!window.ethers) { app.note(&quot;Wallet library unavailable. Reload the page.&quot;, true); return; }</span>
+<span id="L156"><a href="#L156"> 156</a>      app.configured = ethers.utils.isAddress(settings.address) &amp;&amp; settings.address !== ethers.constants.AddressZero;</span>
+<span id="L157"><a href="#L157"> 157</a>      if (app.configured) {</span>
+<span id="L158"><a href="#L158"> 158</a>        app.reader = new ethers.providers.JsonRpcProvider(settings.rpc, settings.chainId);</span>
+<span id="L159"><a href="#L159"> 159</a>        try {</span>
+<span id="L160"><a href="#L160"> 160</a>          // Use the compiler-generated interface for both reads and signed calls.</span>
+<span id="L161"><a href="#L161"> 161</a>        const response = await fetch(&quot;../abi.json&quot;);</span>
+<span id="L162"><a href="#L162"> 162</a>          if (!response.ok) throw new Error();</span>
+<span id="L163"><a href="#L163"> 163</a>          app.contract = new ethers.Contract(settings.address, await response.json(), app.reader);</span>
+<span id="L164"><a href="#L164"> 164</a>        } catch { app.configured = false; app.draw(); app.note(&quot;Could not load the contract interface. Reload the page.&quot;, true); return; }</span>
+<span id="L165"><a href="#L165"> 165</a>        try { await app.restore(); } catch { sessionStorage.removeItem(app.session()); }</span>
+<span id="L166"><a href="#L166"> 166</a>        await app.read();</span>
+<span id="L167"><a href="#L167"> 167</a>      }</span>
+<span id="L168"><a href="#L168"> 168</a>      app.draw();</span>
+<span id="L169"><a href="#L169"> 169</a>    }</span>
+<span id="L170"><a href="#L170"> 170</a>  };</span>
+<span id="L171"><a href="#L171"> 171</a>  byId(&quot;logoutButton&quot;).onclick = function () { app.reset(); window.location.href = &quot;index.html&quot;; };</span>
+<span id="L172"><a href="#L172"> 172</a>  if (byId(&quot;cancelAction&quot;)) byId(&quot;cancelAction&quot;).onclick = function () { byId(&quot;reviewDialog&quot;).close(); };</span>
+<span id="L173"><a href="#L173"> 173</a>  if (window.ethereum &amp;&amp; window.ethereum.on) {</span>
+<span id="L174"><a href="#L174"> 174</a>    for (const event of [&quot;accountsChanged&quot;, &quot;chainChanged&quot;, &quot;disconnect&quot;]) {</span>
+<span id="L175"><a href="#L175"> 175</a>      window.ethereum.on(event, function () { app.reset(); app.note(&quot;Wallet connection changed. Log in again.&quot;); });</span>
+<span id="L176"><a href="#L176"> 176</a>    }</span>
+<span id="L177"><a href="#L177"> 177</a>  }</span>
+<span id="L178"><a href="#L178"> 178</a>  let refreshing = false;</span>
+<span id="L179"><a href="#L179"> 179</a>  setInterval(async function () {</span>
+<span id="L180"><a href="#L180"> 180</a>    if (app.working || document.hidden || refreshing) return;</span>
+<span id="L181"><a href="#L181"> 181</a>    refreshing = true;</span>
+<span id="L182"><a href="#L182"> 182</a>    try {</span>
+<span id="L183"><a href="#L183"> 183</a>      await app.read();</span>
+<span id="L184"><a href="#L184"> 184</a>    } finally {</span>
+<span id="L185"><a href="#L185"> 185</a>      refreshing = false;</span>
+<span id="L186"><a href="#L186"> 186</a>    }</span>
+<span id="L187"><a href="#L187"> 187</a>  }, 5000);</span></pre></html>

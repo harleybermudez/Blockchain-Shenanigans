@@ -1,0 +1,54 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>frontend/script/vote.js</title><style>body{font:14px/1.7 Consolas,monospace;padding:30px;background:#17212e;color:#f0f4fa}a{color:#b8d6ff}span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}span:target{background:#43536b}h1{font:22px system-ui}</style><a href="../documentation.html">Back to documentation</a><h1>frontend/script/vote.js</h1><pre><span id="L1"><a href="#L1">   1</a>  // Page actions for vote.html. Shared wallet and contract logic loads first.</span>
+<span id="L2"><a href="#L2">   2</a>  let selectedCandidate = 0;</span>
+<span id="L3"><a href="#L3">   3</a>  // Keep the ballot summary and review button aligned with the selected candidate.</span>
+<span id="L4"><a href="#L4">   4</a>  function updateSelection() {</span>
+<span id="L5"><a href="#L5">   5</a>    const candidate = app.data.candidates.find(item =&gt; item.id === selectedCandidate);</span>
+<span id="L6"><a href="#L6">   6</a>    byId(&quot;selectionName&quot;).textContent = candidate ? candidate.name : &quot;No candidate selected&quot;;</span>
+<span id="L7"><a href="#L7">   7</a>    byId(&quot;selectionPosition&quot;).textContent = app.data.position;</span>
+<span id="L8"><a href="#L8">   8</a>    byId(&quot;reviewButton&quot;).disabled = app.working || !app.ready || !app.allowed || app.voted || !candidate || app.data.phase !== &quot;open&quot;;</span>
+<span id="L9"><a href="#L9">   9</a>    for (const radio of byId(&quot;candidateChoices&quot;).querySelectorAll(&quot;input&quot;)) radio.disabled = app.working;</span>
+<span id="L10"><a href="#L10">  10</a>  }</span>
+<span id="L11"><a href="#L11">  11</a>  byId(&quot;ballotForm&quot;).onsubmit = function (event) {</span>
+<span id="L12"><a href="#L12">  12</a>    event.preventDefault();</span>
+<span id="L13"><a href="#L13">  13</a>    if (byId(&quot;reviewButton&quot;).disabled) return;</span>
+<span id="L14"><a href="#L14">  14</a>    const candidate = app.data.candidates.find(item =&gt; item.id === selectedCandidate);</span>
+<span id="L15"><a href="#L15">  15</a>    app.confirm(&quot;Review your vote&quot;, candidate.name + &quot; · &quot; + candidate.position + &quot;. A confirmed vote cannot be changed.&quot;, function () {</span>
+<span id="L16"><a href="#L16">  16</a>      app.send(&quot;vote&quot;, [candidate.id], &quot;Your vote is recorded.&quot;, function () { selectedCandidate = 0; });</span>
+<span id="L17"><a href="#L17">  17</a>    });</span>
+<span id="L18"><a href="#L18">  18</a>  };</span>
+<span id="L19"><a href="#L19">  19</a>  app.start(function () {</span>
+<span id="L20"><a href="#L20">  20</a>    const eligible = app.ready &amp;&amp; app.account &amp;&amp; !app.admin &amp;&amp; app.allowed &amp;&amp; !app.voted &amp;&amp; app.data.phase === &quot;open&quot;;</span>
+<span id="L21"><a href="#L21">  21</a>    const recorded = app.ready &amp;&amp; app.voted &amp;&amp; !app.admin;</span>
+<span id="L22"><a href="#L22">  22</a>    byId(&quot;ballotForm&quot;).hidden = !eligible;</span>
+<span id="L23"><a href="#L23">  23</a>    byId(&quot;selectionPanel&quot;).hidden = !eligible;</span>
+<span id="L24"><a href="#L24">  24</a>    byId(&quot;voteGate&quot;).hidden = !!eligible || recorded;</span>
+<span id="L25"><a href="#L25">  25</a>    byId(&quot;voteSuccess&quot;).hidden = !recorded;</span>
+<span id="L26"><a href="#L26">  26</a>    byId(&quot;ballotLayout&quot;).classList.toggle(&quot;is-blocked&quot;, !eligible);</span>
+<span id="L27"><a href="#L27">  27</a>    byId(&quot;position&quot;).textContent = app.data.position || &quot;Select one candidate.&quot;;</span>
+<span id="L28"><a href="#L28">  28</a>    byId(&quot;eligibility&quot;).textContent = recorded ? &quot;Vote recorded&quot; : eligible ? &quot;Eligible to vote&quot; : &quot;&quot;;</span>
+<span id="L29"><a href="#L29">  29</a>    let status = [&quot;Voting is not available yet&quot;, &quot;View candidates&quot;, &quot;candidates.html&quot;];</span>
+<span id="L30"><a href="#L30">  30</a>    if (app.ready) {</span>
+<span id="L31"><a href="#L31">  31</a>      if (app.data.phase === &quot;closed&quot;) status = [&quot;Voting has closed&quot;, &quot;View results&quot;, &quot;results.html&quot;];</span>
+<span id="L32"><a href="#L32">  32</a>      else if (!app.account) status = [&quot;Log in to cast your vote&quot;, &quot;Voter login&quot;, &quot;index.html&quot;];</span>
+<span id="L33"><a href="#L33">  33</a>      else if (app.admin) status = [&quot;Use a separate voter wallet&quot;, &quot;Manage election&quot;, &quot;admin.html&quot;];</span>
+<span id="L34"><a href="#L34">  34</a>      else if (!app.registered) status = [&quot;Register before voting&quot;, &quot;Sign up&quot;, &quot;signup.html&quot;];</span>
+<span id="L35"><a href="#L35">  35</a>      else if (!app.allowed) status = [&quot;Waiting for admin approval&quot;, &quot;View candidates&quot;, &quot;candidates.html&quot;];</span>
+<span id="L36"><a href="#L36">  36</a>      else if (app.data.phase === &quot;setup&quot;) status = [&quot;You are ready. Wait for voting to open.&quot;, &quot;View candidates&quot;, &quot;candidates.html&quot;];</span>
+<span id="L37"><a href="#L37">  37</a>    }</span>
+<span id="L38"><a href="#L38">  38</a>    byId(&quot;gateTitle&quot;).textContent = status[0];</span>
+<span id="L39"><a href="#L39">  39</a>    byId(&quot;gateLink&quot;).textContent = status[1];</span>
+<span id="L40"><a href="#L40">  40</a>    byId(&quot;gateLink&quot;).href = status[2];</span>
+<span id="L41"><a href="#L41">  41</a>    if (!eligible) { selectedCandidate = 0; byId(&quot;candidateChoices&quot;).replaceChildren(); }</span>
+<span id="L42"><a href="#L42">  42</a>    if (eligible &amp;&amp; !byId(&quot;candidateChoices&quot;).children.length) {</span>
+<span id="L43"><a href="#L43">  43</a>      for (const candidate of app.data.candidates) {</span>
+<span id="L44"><a href="#L44">  44</a>        const option = app.copy(&quot;candidateOption&quot;);</span>
+<span id="L45"><a href="#L45">  45</a>        option.querySelector(&quot;.candidate-name&quot;).textContent = candidate.name;</span>
+<span id="L46"><a href="#L46">  46</a>        option.querySelector(&quot;.candidate-position&quot;).textContent = candidate.position;</span>
+<span id="L47"><a href="#L47">  47</a>        const radio = option.querySelector(&quot;input&quot;);</span>
+<span id="L48"><a href="#L48">  48</a>        radio.value = candidate.id;</span>
+<span id="L49"><a href="#L49">  49</a>        radio.onchange = function () { selectedCandidate = candidate.id; updateSelection(); };</span>
+<span id="L50"><a href="#L50">  50</a>        byId(&quot;candidateChoices&quot;).append(option);</span>
+<span id="L51"><a href="#L51">  51</a>      }</span>
+<span id="L52"><a href="#L52">  52</a>    }</span>
+<span id="L53"><a href="#L53">  53</a>    updateSelection();</span>
+<span id="L54"><a href="#L54">  54</a>  });</span></pre></html>

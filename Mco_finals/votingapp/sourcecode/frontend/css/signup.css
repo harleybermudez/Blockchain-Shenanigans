@@ -1,0 +1,10 @@
+/* Page-specific presentation for signup.html. Imported rules provide shared styles. */
+@import url("index.css");
+.signup-actions {
+  display: grid;
+  gap: 14px;
+  margin-top: 30px;
+}
+.signup-actions .primary {
+  margin-top: 0;
+}

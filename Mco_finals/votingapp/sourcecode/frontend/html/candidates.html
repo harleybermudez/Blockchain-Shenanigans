@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101319" />
+    <title>Candidates</title>
+    <link rel="icon" href="../assets/ballot.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/candidates.css" />
+    <!-- Load the wallet library and shared code before this page script. -->
+    <script src="../script/vendor/ethers.umd.min.js" defer></script>
+    <script src="../script/config.js" defer></script>
+    <script src="../script/common.js" defer></script>
+    <script src="../script/candidates.js" defer></script>
+  </head>
+  <body data-page="candidates">
+    <a class="skip-link" href="#mainContent">Skip to content</a>
+    <div class="app-shell">
+      <div class="menu-corner">
+        <button class="menu-trigger" type="button" popovertarget="pageMenu">
+          <span aria-hidden="true">&#9776;</span> Menu
+        </button>
+        <nav id="pageMenu" popover aria-label="Main navigation">
+          <a href="candidates.html" aria-current="page">Candidates</a>
+          <a href="vote.html">Vote</a>
+          <a href="results.html">Results</a>
+          <a href="admin.html" id="manageLink" hidden>Manage election</a>
+          <a href="index.html" id="loginLink">Voter login</a>
+          <a href="signup.html">Voter registration</a>
+          <a href="admin-login.html">Admin access</a>
+          <button hidden id="logoutButton" class="text-button">Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id="mainContent" class="workspace" tabindex="-1">
+        <header class="topbar">
+          <span id="electionStatus" class="status" hidden></span>
+        </header>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <section aria-labelledby="candidatesHeading">
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">YOUR ELECTION</div>
+              <h1 id="candidatesHeading">Meet the candidates.</h1>
+              <p>Review the list before making your choice.</p>
+            </div>
+            <a class="secondary" href="vote.html"
+              >Go to voting <span aria-hidden="true">→</span></a
+            >
+          </div>
+          <p id="position" class="position-label"></p>
+          <div id="emptyCandidates" class="glass empty">
+            <h2>No candidates yet</h2>
+            <p>The candidate list will appear here.</p>
+          </div>
+          <div id="candidateList" class="rows"></div>
+          <template id="candidateRow">
+            <article class="glass candidate-item">
+              <span class="initials" aria-hidden="true"></span>
+              <div>
+                <h2 class="candidate-name"></h2>
+                <small class="candidate-position"></small>
+              </div>
+              <span class="candidate-votes" hidden></span>
+            </article>
+          </template>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

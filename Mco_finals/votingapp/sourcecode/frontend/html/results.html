@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101319" />
+    <title>Results</title>
+    <link rel="icon" href="../assets/ballot.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/results.css" />
+    <!-- Load the wallet library and shared code before this page script. -->
+    <script src="../script/vendor/ethers.umd.min.js" defer></script>
+    <script src="../script/config.js" defer></script>
+    <script src="../script/common.js" defer></script>
+    <script src="../script/results.js" defer></script>
+  </head>
+  <body data-page="results">
+    <a class="skip-link" href="#mainContent">Skip to content</a>
+    <div class="app-shell">
+      <div class="menu-corner">
+        <button class="menu-trigger" type="button" popovertarget="pageMenu">
+          <span aria-hidden="true">&#9776;</span> Menu
+        </button>
+        <nav id="pageMenu" popover aria-label="Main navigation">
+          <a href="candidates.html">Candidates</a>
+          <a href="vote.html">Vote</a>
+          <a href="results.html" aria-current="page">Results</a>
+          <a href="admin.html" id="manageLink" hidden>Manage election</a>
+          <a href="index.html" id="loginLink">Voter login</a>
+          <a href="signup.html">Voter registration</a>
+          <a href="admin-login.html">Admin access</a>
+          <button hidden id="logoutButton" class="text-button">Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id="mainContent" class="workspace" tabindex="-1">
+        <header class="topbar">
+          <span id="electionStatus" class="status" hidden></span>
+        </header>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <section aria-labelledby="resultsHeading">
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">FINAL TABULATION</div>
+              <h1 id="resultsHeading">Election results.</h1>
+              <p>Final vote counts after voting closes.</p>
+            </div>
+            <button id="refreshButton" class="secondary" type="button" disabled>
+              Refresh results <span aria-hidden="true">↻</span>
+            </button>
+          </div>
+          <div id="resultsLocked" class="glass empty">
+            <div class="results-empty-symbol" aria-hidden="true">◷</div>
+            <h2>Results are not available yet</h2>
+            <p>Results appear after voting closes.</p>
+            <a class="secondary" href="candidates.html">View candidates</a>
+          </div>
+          <div id="resultsContent" class="glass" hidden>
+            <div class="results-head">
+              <div>
+                <div class="eyebrow">VOTING CLOSED</div>
+                <h2 id="position"></h2>
+              </div>
+              <div class="total">
+                <strong id="totalVotes">0</strong><small>confirmed votes</small>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <caption class="sr-only">
+                  Final candidate vote counts
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Candidate</th>
+                    <th scope="col">Votes</th>
+                  </tr>
+                </thead>
+                <tbody id="resultRows"></tbody>
+              </table>
+            </div>
+          </div>
+          <template id="resultRow"
+            ><tr>
+              <td class="candidate-name"></td>
+              <td class="candidate-count"></td></tr
+          ></template>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

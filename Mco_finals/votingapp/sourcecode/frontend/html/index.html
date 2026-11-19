@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101319" />
+    <title>Voter login</title>
+    <link rel="icon" href="../assets/ballot.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../css/index.css" />
+    <!-- Load the wallet library and shared code before this page script. -->
+    <script src="../script/vendor/ethers.umd.min.js" defer></script>
+    <script src="../script/config.js" defer></script>
+    <script src="../script/common.js" defer></script>
+    <script src="../script/index.js" defer></script>
+  </head>
+  <body data-page="index">
+    <a class="skip-link" href="#mainContent">Skip to content</a>
+    <div class="app-shell">
+      <div class="menu-corner">
+        <button class="menu-trigger" type="button" popovertarget="pageMenu">
+          <span aria-hidden="true">&#9776;</span> Menu
+        </button>
+        <nav id="pageMenu" popover aria-label="Main navigation">
+          <a href="candidates.html">Candidates</a>
+          <a href="vote.html">Vote</a>
+          <a href="results.html">Results</a>
+          <a href="admin.html" id="manageLink" hidden>Manage election</a>
+          <a href="index.html" id="loginLink" aria-current="page"
+            >Voter login</a
+          >
+          <a href="signup.html">Voter registration</a>
+          <a href="admin-login.html">Admin access</a>
+          <button hidden id="logoutButton" class="text-button">Log out</button>
+        </nav>
+      </div>
+      <!-- Page scripts find elements by these IDs and update their status and controls. -->
+      <main id="mainContent" class="workspace" tabindex="-1">
+        <header class="topbar">
+          <span id="electionStatus" class="status" hidden></span>
+        </header>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <section class="auth-layout" aria-labelledby="loginHeading">
+          <div class="entry-title">
+            <img class="ballot-art" src="../assets/ballot.svg" alt="" />
+            <h1 id="loginHeading">Voter login</h1>
+          </div>
+          <div class="auth-panel">
+            <p>Log in with your registered wallet.</p>
+            <button
+              class="primary full"
+              id="voterLoginButton"
+              type="button"
+              disabled
+            >
+              Log in with MetaMask <span aria-hidden="true">→</span>
+            </button>
+            <div class="divider"></div>
+            <p class="auth-bottom">
+              New voter? <a href="signup.html">Sign up</a>
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

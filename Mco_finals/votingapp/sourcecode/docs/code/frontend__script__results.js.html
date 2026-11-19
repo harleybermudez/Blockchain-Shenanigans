@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>frontend/script/results.js</title><style>body{font:14px/1.7 Consolas,monospace;padding:30px;background:#17212e;color:#f0f4fa}a{color:#b8d6ff}span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}span:target{background:#43536b}h1{font:22px system-ui}</style><a href="../documentation.html">Back to documentation</a><h1>frontend/script/results.js</h1><pre><span id="L1"><a href="#L1">   1</a>  // Page actions for results.html. Shared wallet and contract logic loads first.</span>
+<span id="L2"><a href="#L2">   2</a>  byId(&quot;refreshButton&quot;).onclick = app.read;</span>
+<span id="L3"><a href="#L3">   3</a>  app.start(function () {</span>
+<span id="L4"><a href="#L4">   4</a>    const available = app.ready &amp;&amp; app.data.phase === &quot;closed&quot;;</span>
+<span id="L5"><a href="#L5">   5</a>    byId(&quot;resultsLocked&quot;).hidden = available;</span>
+<span id="L6"><a href="#L6">   6</a>    byId(&quot;resultsContent&quot;).hidden = !available;</span>
+<span id="L7"><a href="#L7">   7</a>    byId(&quot;refreshButton&quot;).disabled = !app.configured || app.working;</span>
+<span id="L8"><a href="#L8">   8</a>    if (!available) return;</span>
+<span id="L9"><a href="#L9">   9</a>    byId(&quot;position&quot;).textContent = app.data.position;</span>
+<span id="L10"><a href="#L10">  10</a>    byId(&quot;totalVotes&quot;).textContent = app.data.total;</span>
+<span id="L11"><a href="#L11">  11</a>    byId(&quot;resultRows&quot;).replaceChildren();</span>
+<span id="L12"><a href="#L12">  12</a>    for (const candidate of app.data.candidates) {</span>
+<span id="L13"><a href="#L13">  13</a>      const row = app.copy(&quot;resultRow&quot;);</span>
+<span id="L14"><a href="#L14">  14</a>      row.querySelector(&quot;.candidate-name&quot;).textContent = candidate.name;</span>
+<span id="L15"><a href="#L15">  15</a>      row.querySelector(&quot;.candidate-count&quot;).textContent = candidate.votes;</span>
+<span id="L16"><a href="#L16">  16</a>      byId(&quot;resultRows&quot;).append(row);</span>
+<span id="L17"><a href="#L17">  17</a>    }</span>
+<span id="L18"><a href="#L18">  18</a>  });</span></pre></html>

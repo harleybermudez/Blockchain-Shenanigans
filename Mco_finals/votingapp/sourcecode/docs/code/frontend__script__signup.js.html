@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>frontend/script/signup.js</title><style>body{font:14px/1.7 Consolas,monospace;padding:30px;background:#17212e;color:#f0f4fa}a{color:#b8d6ff}span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}span:target{background:#43536b}h1{font:22px system-ui}</style><a href="../documentation.html">Back to documentation</a><h1>frontend/script/signup.js</h1><pre><span id="L1"><a href="#L1">   1</a>  // Page actions for signup.html. Shared wallet and contract logic loads first.</span>
+<span id="L2"><a href="#L2">   2</a>  byId(&quot;connectButton&quot;).onclick = function () { app.connect(&quot;signup&quot;); };</span>
+<span id="L3"><a href="#L3">   3</a>  byId(&quot;registerButton&quot;).onclick = function () {</span>
+<span id="L4"><a href="#L4">   4</a>    if (!byId(&quot;registerButton&quot;).disabled) app.send(&quot;registerVoter&quot;, [], &quot;Registration recorded. Waiting for admin approval.&quot;);</span>
+<span id="L5"><a href="#L5">   5</a>  };</span>
+<span id="L6"><a href="#L6">   6</a>  app.start(function () {</span>
+<span id="L7"><a href="#L7">   7</a>    byId(&quot;connectButton&quot;).disabled = !app.configured || app.working || !!app.account;</span>
+<span id="L8"><a href="#L8">   8</a>    byId(&quot;connectButton&quot;).textContent = app.account ? &quot;Wallet connected&quot; : &quot;Connect MetaMask&quot;;</span>
+<span id="L9"><a href="#L9">   9</a>    byId(&quot;registerButton&quot;).disabled = !app.ready || app.working || !app.account || app.admin || app.registered || app.data.phase !== &quot;setup&quot;;</span>
+<span id="L10"><a href="#L10">  10</a>    byId(&quot;registerButton&quot;).textContent = app.registered ? &quot;Registration recorded&quot; : &quot;Submit registration&quot;;</span>
+<span id="L11"><a href="#L11">  11</a>  });</span></pre></html>

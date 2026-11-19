@@ -1,0 +1,63 @@
+/* Page-specific presentation for results.html. Imported rules provide shared styles. */
+@import url("common.css");
+.results-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 22px;
+  margin-bottom: 25px;
+}
+.total {
+  text-align: right;
+}
+.total strong {
+  display: block;
+  font-size: 44px;
+  letter-spacing: -1.4px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.total small {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 18px 10px;
+  text-align: left;
+  border-bottom: 1px solid #ffffff1d;
+  overflow-wrap: anywhere;
+}
+th {
+  font-size: 12px;
+  font-weight: 500;
+  color: #bac6d7;
+}
+td:last-child,
+th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.results-empty-symbol {
+  font-size: 36px;
+  margin: 0 0 20px;
+  color: #d8e4f3;
+}
+@media (max-width: 450px) {
+  .results-head {
+    flex-direction: column;
+  }
+  .total {
+    text-align: left;
+  }
+  .total strong {
+    font-size: 36px;
+  }
+}
